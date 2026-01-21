@@ -370,38 +370,25 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 24px;
       display: flex;
       flex-direction: column;
       height: 680px;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
-    /* Custom scrollbar for controls panel */
-    .controls-panel::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .controls-panel::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .controls-panel::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
-    }
-
-    .controls-panel::-webkit-scrollbar-thumb:hover {
-      background: var(--primary);
+    .controls-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
 
     .controls-title {
       font-size: 16px;
       font-weight: 700;
-      margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 10px;
+      margin: 0;
     }
 
     .controls-title::before {
@@ -412,8 +399,43 @@
       border-radius: 2px;
     }
 
+    .controls-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+
+    /* Custom scrollbar for controls body */
+    .controls-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .controls-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .controls-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .controls-body::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    .controls-footer {
+      padding: 16px 20px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+      flex-shrink: 0;
+    }
+
     .control-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
     }
 
     .control-label {
@@ -461,18 +483,15 @@
     }
 
     .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
 
     .action-btn {
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-radius: var(--radius-sm);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -480,8 +499,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      width: 100%;
+      gap: 6px;
+    }
+
+    .action-btn.full-width {
+      grid-column: span 2;
     }
 
     .action-btn-primary {
@@ -544,8 +566,14 @@
     }
 
     .mode-icon {
-      font-size: 20px;
+      width: 20px;
+      height: 20px;
       margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    .mode-btn.active .mode-icon {
+      color: var(--primary);
     }
 
     .mode-text {
@@ -804,14 +832,13 @@
       overflow: hidden;
     }
 
-    .stat-card::before {
-      content: attr(data-icon);
+    .stat-card .stat-icon {
       position: absolute;
       top: 12px;
       right: 12px;
-      font-size: 32px;
-      opacity: 0.2;
-      z-index: 0;
+      width: 36px;
+      height: 36px;
+      opacity: 0.25;
     }
 
     .stat-card.purple { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
@@ -1230,8 +1257,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
       margin-bottom: 20px;
+      color: var(--primary);
+    }
+
+    .feature-icon svg {
+      width: 24px;
+      height: 24px;
     }
 
     .feature-title {
@@ -1417,123 +1449,131 @@
         <div class="demo-grid">
           <!-- Controls -->
           <div class="controls-panel">
-            <h3 class="controls-title">Capture Options</h3>
+            <div class="controls-header">
+              <h3 class="controls-title">Capture Options</h3>
+            </div>
 
-            <!-- Output Mode Selector -->
-            <div class="control-group">
-              <label class="control-label">Output Mode</label>
-              <div class="mode-selector">
-                <button class="mode-btn active" data-mode="image" onclick="setMode('image')">
-                  <span class="mode-icon">🖼️</span>
-                  <span class="mode-text">Image</span>
-                  <span class="mode-desc">PNG, JPEG, WebP</span>
+            <div class="controls-body">
+              <!-- Output Mode Selector -->
+              <div class="control-group">
+                <label class="control-label">Output Mode</label>
+                <div class="mode-selector">
+                  <button class="mode-btn active" data-mode="image" onclick="setMode('image')">
+                    <svg class="mode-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <span class="mode-text">Image</span>
+                    <span class="mode-desc">PNG, JPEG, WebP</span>
+                  </button>
+                  <button class="mode-btn" data-mode="pdf" onclick="setMode('pdf')">
+                    <svg class="mode-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                    <span class="mode-text">PDF</span>
+                    <span class="mode-desc">Multi-page with headers</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Image Options (shown when image mode) -->
+              <div id="image-options">
+                <div class="control-group">
+                  <label class="control-label">Format</label>
+                  <div class="control-buttons">
+                    <button class="control-btn active" data-format="png">PNG</button>
+                    <button class="control-btn" data-format="jpeg">JPEG</button>
+                    <button class="control-btn" data-format="webp">WebP</button>
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">Scale</label>
+                  <div class="control-buttons">
+                    <button class="control-btn" data-scale="1">1x</button>
+                    <button class="control-btn active" data-scale="2">2x</button>
+                    <button class="control-btn" data-scale="3">3x</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PDF Options (shown when pdf mode) -->
+              <div id="pdf-options" style="display: none;">
+                <div class="control-group">
+                  <label class="control-label">Page Size</label>
+                  <div class="control-buttons">
+                    <button class="control-btn active" data-pagesize="A4">A4</button>
+                    <button class="control-btn" data-pagesize="Letter">Letter</button>
+                    <button class="control-btn" data-pagesize="Legal">Legal</button>
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">Quality</label>
+                  <div class="control-buttons">
+                    <button class="control-btn" data-quality="0.7">Low</button>
+                    <button class="control-btn" data-quality="0.85">Med</button>
+                    <button class="control-btn active" data-quality="0.95">High</button>
+                    <button class="control-btn" data-quality="1">Max</button>
+                  </div>
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">Header Text</label>
+                  <input type="text" class="control-input" id="header-text" value="Analytics Report - {date}" placeholder="Header text...">
+                </div>
+
+                <div class="control-group">
+                  <label class="control-label">Footer Text</label>
+                  <input type="text" class="control-input" id="footer-text" value="Generated with PrimSnap" placeholder="Footer text...">
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Options</label>
+                <div class="options-grid">
+                  <div class="option-row">
+                    <span class="option-label">Use @media print styles</span>
+                    <div class="toggle" id="toggle-print" onclick="toggleOption(this)"></div>
+                  </div>
+                  <div class="option-row" id="header-option" style="display: none;">
+                    <span class="option-label">Show header</span>
+                    <div class="toggle active" id="toggle-header" onclick="toggleOption(this)"></div>
+                  </div>
+                  <div class="option-row" id="footer-option" style="display: none;">
+                    <span class="option-label">Show footer</span>
+                    <div class="toggle active" id="toggle-footer" onclick="toggleOption(this)"></div>
+                  </div>
+                  <div class="option-row">
+                    <span class="option-label">Avoid break inside</span>
+                    <div class="toggle" id="toggle-break" onclick="toggleOption(this)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="controls-footer">
+              <!-- Action Buttons -->
+              <div class="action-buttons" id="image-actions">
+                <button class="action-btn action-btn-primary full-width" onclick="capturePreview()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Preview
                 </button>
-                <button class="mode-btn" data-mode="pdf" onclick="setMode('pdf')">
-                  <span class="mode-icon">📄</span>
-                  <span class="mode-text">PDF</span>
-                  <span class="mode-desc">Multi-page with headers</span>
+                <button class="action-btn action-btn-secondary" onclick="downloadImage()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download
+                </button>
+                <button class="action-btn action-btn-accent" onclick="captureHighRes()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                  High-Res
                 </button>
               </div>
-            </div>
 
-            <!-- Image Options (shown when image mode) -->
-            <div id="image-options">
-              <div class="control-group">
-                <label class="control-label">Format</label>
-                <div class="control-buttons">
-                  <button class="control-btn active" data-format="png">PNG</button>
-                  <button class="control-btn" data-format="jpeg">JPEG</button>
-                  <button class="control-btn" data-format="webp">WebP</button>
-                </div>
+              <div class="action-buttons" id="pdf-actions" style="display: none;">
+                <button class="action-btn action-btn-primary" onclick="previewPDF()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  Preview
+                </button>
+                <button class="action-btn action-btn-accent" onclick="downloadPDF()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download PDF
+                </button>
               </div>
-
-              <div class="control-group">
-                <label class="control-label">Scale</label>
-                <div class="control-buttons">
-                  <button class="control-btn" data-scale="1">1x</button>
-                  <button class="control-btn active" data-scale="2">2x</button>
-                  <button class="control-btn" data-scale="3">3x</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- PDF Options (shown when pdf mode) -->
-            <div id="pdf-options" style="display: none;">
-              <div class="control-group">
-                <label class="control-label">Page Size</label>
-                <div class="control-buttons">
-                  <button class="control-btn active" data-pagesize="A4">A4</button>
-                  <button class="control-btn" data-pagesize="Letter">Letter</button>
-                  <button class="control-btn" data-pagesize="Legal">Legal</button>
-                </div>
-              </div>
-
-              <div class="control-group">
-                <label class="control-label">Quality</label>
-                <div class="control-buttons">
-                  <button class="control-btn" data-quality="0.7">Low</button>
-                  <button class="control-btn" data-quality="0.85">Medium</button>
-                  <button class="control-btn active" data-quality="0.95">High</button>
-                  <button class="control-btn" data-quality="1">Max</button>
-                </div>
-              </div>
-
-              <div class="control-group">
-                <label class="control-label">Header Text</label>
-                <input type="text" class="control-input" id="header-text" value="Analytics Report - {date}" placeholder="Header text...">
-              </div>
-
-              <div class="control-group">
-                <label class="control-label">Footer Text</label>
-                <input type="text" class="control-input" id="footer-text" value="Generated with PrimSnap" placeholder="Footer text...">
-              </div>
-            </div>
-
-            <div class="control-group">
-              <label class="control-label">Options</label>
-              <div class="options-grid">
-                <div class="option-row">
-                  <span class="option-label">Use @media print styles</span>
-                  <div class="toggle" id="toggle-print" onclick="toggleOption(this)"></div>
-                </div>
-                <div class="option-row" id="header-option" style="display: none;">
-                  <span class="option-label">Show header</span>
-                  <div class="toggle active" id="toggle-header" onclick="toggleOption(this)"></div>
-                </div>
-                <div class="option-row" id="footer-option" style="display: none;">
-                  <span class="option-label">Show footer</span>
-                  <div class="toggle active" id="toggle-footer" onclick="toggleOption(this)"></div>
-                </div>
-                <div class="option-row">
-                  <span class="option-label">Avoid break inside sections</span>
-                  <div class="toggle" id="toggle-break" onclick="toggleOption(this)"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons" id="image-actions">
-              <button class="action-btn action-btn-primary" onclick="capturePreview()">
-                Preview Capture
-              </button>
-              <button class="action-btn action-btn-secondary" onclick="downloadImage()">
-                Download Image
-              </button>
-              <button class="action-btn action-btn-accent" onclick="captureHighRes()">
-                High-Res (3x)
-              </button>
-              <button class="action-btn action-btn-secondary" onclick="captureWithInjection()">
-                With CSS Injection
-              </button>
-            </div>
-
-            <div class="action-buttons" id="pdf-actions" style="display: none;">
-              <button class="action-btn action-btn-primary" onclick="previewPDF()">
-                Preview PDF
-              </button>
-              <button class="action-btn action-btn-accent" onclick="downloadPDF()">
-                Download PDF
-              </button>
             </div>
           </div>
 
@@ -1562,19 +1602,23 @@
                   <div class="report-content">
                     <!-- Stats -->
                     <div class="stats-row">
-                      <div class="stat-card purple" data-icon="👥">
+                      <div class="stat-card purple">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         <div class="stat-value">24,891</div>
                         <div class="stat-label">Users</div>
                       </div>
-                      <div class="stat-card green" data-icon="📈">
+                      <div class="stat-card green">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                         <div class="stat-value">98.7%</div>
                         <div class="stat-label">Uptime</div>
                       </div>
-                      <div class="stat-card orange" data-icon="💰">
+                      <div class="stat-card orange">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                         <div class="stat-value">$4.2M</div>
                         <div class="stat-label">Revenue</div>
                       </div>
-                      <div class="stat-card blue" data-icon="🚀">
+                      <div class="stat-card blue">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                         <div class="stat-value">1,247</div>
                         <div class="stat-label">Deploys</div>
                       </div>
@@ -1583,7 +1627,7 @@
                     <!-- Transforms -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">🔄</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
                         <h3 class="section-title">CSS Transforms</h3>
                       </div>
                       <div class="demo-row">
@@ -1609,7 +1653,7 @@
                     <!-- Clip Paths -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">✂️</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
                         <h3 class="section-title">Clip-Path</h3>
                       </div>
                       <div class="clip-row">
@@ -1623,7 +1667,7 @@
                     <!-- Filters -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">🎛️</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
                         <h3 class="section-title">CSS Filters</h3>
                       </div>
                       <div class="filter-row">
@@ -1638,7 +1682,7 @@
                     <!-- Shadows -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">🌑</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M21 12H9"/><path d="M21 6H9"/><path d="M21 18H9"/></svg></div>
                         <h3 class="section-title">Box & Text Shadows</h3>
                       </div>
                       <div class="shadow-row">
@@ -1657,7 +1701,7 @@
                     <!-- Gradients -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">🎨</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
                         <h3 class="section-title">Complex Gradients</h3>
                       </div>
                       <div class="gradient-row">
@@ -1670,7 +1714,7 @@
                     <!-- Progress -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">📊</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
                         <h3 class="section-title">Progress</h3>
                       </div>
                       <div class="progress-item">
@@ -1705,7 +1749,7 @@
                     <!-- Table -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">📋</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H3V5a2 2 0 0 1 2-2h4v8z"/><path d="M21 11h-6V3h4a2 2 0 0 1 2 2v6z"/><path d="M9 21H5a2 2 0 0 1-2-2v-4h6v6z"/><path d="M21 21h-4a2 2 0 0 1-2-2v-4h6v4a2 2 0 0 1-2 2z"/></svg></div>
                         <h3 class="section-title">Data Table</h3>
                       </div>
                       <table class="data-table">
@@ -1746,7 +1790,7 @@
                     <!-- Page 2 Header -->
                     <div class="section" style="margin-top: 20px;">
                       <div class="section-header">
-                        <div class="section-icon">📈</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
                         <h3 class="section-title">Extended Analytics - Page 2</h3>
                       </div>
                       <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
@@ -1827,7 +1871,7 @@
                     <!-- Additional Progress -->
                     <div class="section">
                       <div class="section-header">
-                        <div class="section-icon">🎯</div>
+                        <div class="section-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
                         <h3 class="section-title">Q1 Goals Progress</h3>
                       </div>
                       <div class="progress-item">
@@ -1898,47 +1942,47 @@
         </div>
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon">🎯</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
             <h4 class="feature-title">Pixel-Perfect Accuracy</h4>
             <p class="feature-desc">SVG foreignObject rendering ensures your screenshots match exactly what you see in the browser.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🎨</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
             <h4 class="feature-title">Full CSS Support</h4>
             <p class="feature-desc">Gradients, transforms, filters, clip-paths, pseudo-elements, CSS variables - all captured perfectly.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🖨️</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div>
             <h4 class="feature-title">Print Styles</h4>
             <p class="feature-desc">Respects @media print CSS rules just like the browser's native print function.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">📄</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></div>
             <h4 class="feature-title">Header & Footer</h4>
             <p class="feature-desc">Add custom headers and footers with template variables like page numbers and dates.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">✂️</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
             <h4 class="feature-title">Page Breaks</h4>
             <p class="feature-desc">Control page breaks with break-inside: avoid for clean multi-page documents.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">💉</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11v6"/><path d="M9 14h6"/></svg></div>
             <h4 class="feature-title">CSS/JS Injection</h4>
             <p class="feature-desc">Inject custom styles or run JavaScript before capture for dynamic modifications.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🌙</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></div>
             <h4 class="feature-title">Shadow DOM</h4>
             <p class="feature-desc">Full support for Web Components and Shadow DOM traversal.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">🔤</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
             <h4 class="feature-title">Web Fonts</h4>
             <p class="feature-desc">Waits for fonts to load and inlines them as data URIs for reliable text rendering.</p>
           </div>
           <div class="feature-card">
-            <div class="feature-icon">📦</div>
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
             <h4 class="feature-title">Zero Dependencies</h4>
             <p class="feature-desc">Single file, no build tools, no external dependencies. Just include and use.</p>
           </div>

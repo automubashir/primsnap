@@ -1095,50 +1095,54 @@
   };
 
   // ============================================================================
-  // PREVIEW MODAL WITH ZOOM/PAN
+  // PREVIEW MODAL - Simple, Clean Implementation
   // ============================================================================
 
   const PreviewModal = {
     modal: null,
-    zoom: 1,
-    panX: 0,
-    panY: 0,
+    img: null,
+    scale: 1,
+    translateX: 0,
+    translateY: 0,
     isDragging: false,
-    startX: 0,
-    startY: 0,
+    lastX: 0,
+    lastY: 0,
 
     show(dataUrl, options = {}) {
       this.hide();
-      this.zoom = 1;
-      this.panX = 0;
-      this.panY = 0;
+      this.scale = 1;
+      this.translateX = 0;
+      this.translateY = 0;
 
       const modal = document.createElement('div');
       modal.id = 'primsnap-modal';
       modal.innerHTML = `
-        <div class="primsnap-overlay">
-          <div class="primsnap-container">
-            <div class="primsnap-header">
-              <h3>${options.title || 'Preview'}</h3>
-              <div class="primsnap-zoom-controls">
-                <button class="primsnap-zoom-btn" data-action="zoom-out" title="Zoom Out">−</button>
-                <span class="primsnap-zoom-level">100%</span>
-                <button class="primsnap-zoom-btn" data-action="zoom-in" title="Zoom In">+</button>
-                <button class="primsnap-zoom-btn" data-action="zoom-reset" title="Reset">⟲</button>
-                <button class="primsnap-zoom-btn" data-action="zoom-fit" title="Fit to Screen">⊡</button>
+        <div class="ps-overlay">
+          <div class="ps-modal">
+            <div class="ps-toolbar">
+              <span class="ps-title">${options.title || 'Preview'}</span>
+              <div class="ps-zoom-controls">
+                <button class="ps-btn-icon" data-action="zoom-out" title="Zoom Out">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/></svg>
+                </button>
+                <span class="ps-zoom-value">100%</span>
+                <button class="ps-btn-icon" data-action="zoom-in" title="Zoom In">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                </button>
+                <button class="ps-btn-icon" data-action="reset" title="Reset View">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                </button>
               </div>
-              <div class="primsnap-actions">
-                <button class="primsnap-btn primsnap-btn-secondary" data-action="close">Cancel</button>
-                <button class="primsnap-btn primsnap-btn-primary" data-action="download">Download</button>
+              <div class="ps-actions">
+                <button class="ps-btn ps-btn-ghost" data-action="close">Cancel</button>
+                <button class="ps-btn ps-btn-primary" data-action="download">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download
+                </button>
               </div>
             </div>
-            <div class="primsnap-body">
-              <div class="primsnap-viewer">
-                <img src="${dataUrl}" alt="Preview" draggable="false">
-              </div>
-            </div>
-            <div class="primsnap-footer">
-              <span class="primsnap-hint">Scroll to zoom • Drag to pan • Double-click to reset</span>
+            <div class="ps-canvas">
+              <img src="${dataUrl}" alt="Preview" draggable="false">
             </div>
           </div>
         </div>
@@ -1146,249 +1150,107 @@
 
       const styles = document.createElement('style');
       styles.textContent = `
-        #primsnap-modal {
-          position: fixed;
-          inset: 0;
-          z-index: 999999;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .primsnap-overlay {
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.95);
-          backdrop-filter: blur(8px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-        }
-        .primsnap-container {
-          background: #1a1a2e;
-          border-radius: 16px;
-          width: 100%;
-          max-width: 1200px;
-          max-height: 95vh;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 25px 100px rgba(0, 0, 0, 0.5);
-          animation: primsnap-in 0.3s ease;
-        }
-        @keyframes primsnap-in {
-          from { opacity: 0; transform: scale(0.95) translateY(-20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .primsnap-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px 24px;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-          gap: 16px;
-        }
-        .primsnap-header h3 {
-          margin: 0;
-          color: #fff;
-          font-size: 18px;
-          font-weight: 600;
-          white-space: nowrap;
-        }
-        .primsnap-zoom-controls {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(255,255,255,0.05);
-          padding: 6px 12px;
-          border-radius: 8px;
-        }
-        .primsnap-zoom-btn {
-          width: 32px;
-          height: 32px;
-          border: none;
-          background: rgba(255,255,255,0.1);
-          color: #fff;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s;
-        }
-        .primsnap-zoom-btn:hover {
-          background: rgba(99, 102, 241, 0.5);
-        }
-        .primsnap-zoom-level {
-          color: #a1a1aa;
-          font-size: 13px;
-          min-width: 50px;
-          text-align: center;
-          font-weight: 500;
-        }
-        .primsnap-actions {
-          display: flex;
-          gap: 12px;
-        }
-        .primsnap-btn {
-          padding: 10px 20px;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .primsnap-btn-secondary {
-          background: rgba(255,255,255,0.1);
-          color: #aaa;
-        }
-        .primsnap-btn-secondary:hover {
-          background: rgba(255,255,255,0.15);
-          color: #fff;
-        }
-        .primsnap-btn-primary {
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-          color: #fff;
-        }
-        .primsnap-btn-primary:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-        }
-        .primsnap-body {
-          flex: 1;
-          overflow: hidden;
-          background: #0f0f1a;
-          position: relative;
-          min-height: 400px;
-          max-height: 70vh;
-        }
-        .primsnap-viewer {
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          cursor: grab;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: absolute;
-          inset: 0;
-          padding: 24px;
-        }
-        .primsnap-viewer.dragging {
-          cursor: grabbing;
-        }
-        .primsnap-viewer img {
-          max-width: 100%;
-          max-height: 100%;
-          object-fit: contain;
-          transform-origin: center center;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-          border-radius: 4px;
-          user-select: none;
-        }
-        .primsnap-footer {
-          padding: 12px 24px;
-          border-top: 1px solid rgba(255,255,255,0.1);
-          border-radius: 0 0 16px 16px;
-        }
-        .primsnap-hint {
-          color: #6b7280;
-          font-size: 12px;
-        }
+        #primsnap-modal { position: fixed; inset: 0; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .ps-overlay { width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .ps-modal { background: #18181b; border-radius: 12px; width: 100%; max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; }
+        .ps-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #27272a; border-bottom: 1px solid #3f3f46; gap: 12px; }
+        .ps-title { color: #fff; font-size: 14px; font-weight: 600; }
+        .ps-zoom-controls { display: flex; align-items: center; gap: 8px; }
+        .ps-zoom-value { color: #a1a1aa; font-size: 13px; min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+        .ps-btn-icon { width: 32px; height: 32px; border: none; background: #3f3f46; color: #fff; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .ps-btn-icon:hover { background: #52525b; }
+        .ps-actions { display: flex; gap: 8px; }
+        .ps-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .ps-btn-ghost { background: transparent; color: #a1a1aa; }
+        .ps-btn-ghost:hover { background: #3f3f46; color: #fff; }
+        .ps-btn-primary { background: #6366f1; color: #fff; }
+        .ps-btn-primary:hover { background: #4f46e5; }
+        .ps-canvas { flex: 1; background: #09090b; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; min-height: 400px; }
+        .ps-canvas.dragging { cursor: grabbing; }
+        .ps-canvas img { max-width: 90%; max-height: calc(90vh - 100px); object-fit: contain; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: transform 0.1s ease-out; user-select: none; pointer-events: none; }
       `;
 
       modal.appendChild(styles);
       document.body.appendChild(modal);
       document.body.style.overflow = 'hidden';
       this.modal = modal;
+      this.img = modal.querySelector('.ps-canvas img');
 
-      const viewer = modal.querySelector('.primsnap-viewer');
-      const img = viewer.querySelector('img');
-      const zoomLevel = modal.querySelector('.primsnap-zoom-level');
+      const canvas = modal.querySelector('.ps-canvas');
+      const zoomValue = modal.querySelector('.ps-zoom-value');
 
-      const updateTransform = () => {
-        img.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
-        zoomLevel.textContent = Math.round(this.zoom * 100) + '%';
+      const updateView = () => {
+        this.img.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+        zoomValue.textContent = Math.round(this.scale * 100) + '%';
       };
 
-      const setZoom = (newZoom, centerX, centerY) => {
-        const oldZoom = this.zoom;
-        this.zoom = Math.max(0.1, Math.min(10, newZoom));
-
-        if (centerX !== undefined && centerY !== undefined) {
-          const rect = viewer.getBoundingClientRect();
-          const x = centerX - rect.left - rect.width / 2;
-          const y = centerY - rect.top - rect.height / 2;
-          this.panX -= x * (this.zoom / oldZoom - 1);
-          this.panY -= y * (this.zoom / oldZoom - 1);
-        }
-
-        updateTransform();
+      const resetView = () => {
+        this.scale = 1;
+        this.translateX = 0;
+        this.translateY = 0;
+        updateView();
       };
 
-      // Zoom controls
-      modal.querySelector('[data-action="zoom-in"]').onclick = () => setZoom(this.zoom * 1.25);
-      modal.querySelector('[data-action="zoom-out"]').onclick = () => setZoom(this.zoom / 1.25);
-      modal.querySelector('[data-action="zoom-reset"]').onclick = () => {
-        this.zoom = 1;
-        this.panX = 0;
-        this.panY = 0;
-        updateTransform();
+      // Zoom buttons
+      modal.querySelector('[data-action="zoom-in"]').onclick = () => {
+        this.scale = Math.min(5, this.scale * 1.25);
+        updateView();
       };
-      modal.querySelector('[data-action="zoom-fit"]').onclick = () => {
-        const rect = viewer.getBoundingClientRect();
-        const imgRect = img.getBoundingClientRect();
-        const scaleX = (rect.width - 48) / (imgRect.width / this.zoom);
-        const scaleY = (rect.height - 48) / (imgRect.height / this.zoom);
-        this.zoom = Math.min(scaleX, scaleY, 1);
-        this.panX = 0;
-        this.panY = 0;
-        updateTransform();
+      modal.querySelector('[data-action="zoom-out"]').onclick = () => {
+        this.scale = Math.max(0.25, this.scale / 1.25);
+        updateView();
       };
+      modal.querySelector('[data-action="reset"]').onclick = resetView;
 
       // Mouse wheel zoom
-      viewer.addEventListener('wheel', (e) => {
+      canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        setZoom(this.zoom * delta, e.clientX, e.clientY);
+        this.scale = Math.max(0.25, Math.min(5, this.scale * delta));
+        updateView();
       }, { passive: false });
 
       // Pan with drag
-      viewer.addEventListener('mousedown', (e) => {
+      canvas.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         this.isDragging = true;
-        this.startX = e.clientX - this.panX;
-        this.startY = e.clientY - this.panY;
-        viewer.classList.add('dragging');
+        this.lastX = e.clientX;
+        this.lastY = e.clientY;
+        canvas.classList.add('dragging');
       });
 
-      document.addEventListener('mousemove', this._onMouseMove = (e) => {
+      const onMouseMove = (e) => {
         if (!this.isDragging) return;
-        this.panX = e.clientX - this.startX;
-        this.panY = e.clientY - this.startY;
-        updateTransform();
-      });
+        this.translateX += e.clientX - this.lastX;
+        this.translateY += e.clientY - this.lastY;
+        this.lastX = e.clientX;
+        this.lastY = e.clientY;
+        updateView();
+      };
 
-      document.addEventListener('mouseup', this._onMouseUp = () => {
+      const onMouseUp = () => {
         this.isDragging = false;
-        viewer.classList.remove('dragging');
-      });
+        canvas.classList.remove('dragging');
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      this._cleanup = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
 
       // Double-click to reset
-      viewer.addEventListener('dblclick', () => {
-        this.zoom = 1;
-        this.panX = 0;
-        this.panY = 0;
-        updateTransform();
-      });
+      canvas.addEventListener('dblclick', resetView);
 
-      // Close/Download buttons
+      // Close handlers
       modal.querySelector('[data-action="close"]').onclick = () => this.hide();
       modal.querySelector('[data-action="download"]').onclick = () => {
         if (options.onDownload) options.onDownload();
         this.hide();
       };
-      modal.querySelector('.primsnap-overlay').onclick = (e) => {
-        if (e.target.classList.contains('primsnap-overlay')) this.hide();
+      modal.querySelector('.ps-overlay').onclick = (e) => {
+        if (e.target.classList.contains('ps-overlay')) this.hide();
       };
 
       const escHandler = (e) => {
@@ -1402,10 +1264,10 @@
 
     hide() {
       if (this.modal) {
-        document.removeEventListener('mousemove', this._onMouseMove);
-        document.removeEventListener('mouseup', this._onMouseUp);
+        if (this._cleanup) this._cleanup();
         this.modal.remove();
         this.modal = null;
+        this.img = null;
         document.body.style.overflow = '';
       }
     }
