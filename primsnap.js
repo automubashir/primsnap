@@ -1479,8 +1479,9 @@
           0, 0, contentWidth, Math.min(contentHeight, (imgHeight - sourceY) * scale)
         );
 
-        // Get JPEG data
-        const jpegData = pageCanvas.toDataURL('image/jpeg', 0.92);
+        // Get JPEG data with configurable quality
+        const quality = options.pdfQuality || 0.92;
+        const jpegData = pageCanvas.toDataURL('image/jpeg', quality);
         const jpegBinary = atob(jpegData.split(',')[1]);
 
         // Add image XObject
