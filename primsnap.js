@@ -1259,6 +1259,7 @@
           background: #0f0f1a;
           position: relative;
           min-height: 400px;
+          max-height: 70vh;
         }
         .primsnap-viewer {
           width: 100%;
@@ -1270,13 +1271,16 @@
           justify-content: center;
           position: absolute;
           inset: 0;
+          padding: 24px;
         }
         .primsnap-viewer.dragging {
           cursor: grabbing;
         }
         .primsnap-viewer img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
           transform-origin: center center;
-          transition: transform 0.1s ease-out;
           box-shadow: 0 10px 40px rgba(0,0,0,0.5);
           border-radius: 4px;
           user-select: none;
@@ -1424,16 +1428,24 @@
       const footerHeight = options.showFooter ? (options.footer?.height || 40) : 0;
       const margin = options.pdfMargin || 40;
 
-      // Calculate content area per page
-      const contentWidth = pageSize.width - (margin * 2);
-      const contentHeight = pageSize.height - (margin * 2) - headerHeight - footerHeight;
+      // PDF dimensions in points (72 DPI)
+      const pdfContentWidth = pageSize.width - (margin * 2);
+      const pdfContentHeight = pageSize.height - (margin * 2) - headerHeight - footerHeight;
 
-      // Calculate how many pages we need
+      // Use higher resolution for rendering (multiply by DPI factor)
+      // 2 = 144 DPI, 3 = 216 DPI for better quality
+      const dpiMultiplier = options.pdfDpi || 2;
+      const renderWidth = Math.round(pdfContentWidth * dpiMultiplier);
+      const renderHeight = Math.round(pdfContentHeight * dpiMultiplier);
+
+      // Calculate how many pages we need based on source image
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const scale = contentWidth / imgWidth;
-      const scaledHeight = imgHeight * scale;
-      const totalPages = Math.ceil(scaledHeight / contentHeight);
+
+      // Scale factor: how the source canvas maps to render canvas width
+      const renderScale = renderWidth / imgWidth;
+      const scaledHeight = imgHeight * renderScale;
+      const totalPages = Math.ceil(scaledHeight / renderHeight);
 
       // Create PDF structure (minimal PDF 1.4)
       const objects = [];
@@ -1458,35 +1470,41 @@
       const imageIds = [];
 
       for (let page = 0; page < totalPages; page++) {
-        // Create canvas for this page slice
+        // Create high-resolution canvas for this page slice
         const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = contentWidth;
-        pageCanvas.height = contentHeight;
+        pageCanvas.width = renderWidth;
+        pageCanvas.height = renderHeight;
         const ctx = pageCanvas.getContext('2d');
+
+        // Enable image smoothing for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         // Fill with white background
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, contentWidth, contentHeight);
+        ctx.fillRect(0, 0, renderWidth, renderHeight);
 
-        // Calculate source region
-        const sourceY = (page * contentHeight) / scale;
-        const sourceHeight = contentHeight / scale;
+        // Calculate source region from original canvas
+        const sourceY = (page * renderHeight) / renderScale;
+        const sourceHeight = renderHeight / renderScale;
+        const actualSourceHeight = Math.min(sourceHeight, imgHeight - sourceY);
+        const actualRenderHeight = actualSourceHeight * renderScale;
 
-        // Draw the slice
+        // Draw the slice at high resolution
         ctx.drawImage(
           canvas,
-          0, sourceY, imgWidth, Math.min(sourceHeight, imgHeight - sourceY),
-          0, 0, contentWidth, Math.min(contentHeight, (imgHeight - sourceY) * scale)
+          0, sourceY, imgWidth, actualSourceHeight,
+          0, 0, renderWidth, actualRenderHeight
         );
 
         // Get JPEG data with configurable quality
-        const quality = options.pdfQuality || 0.92;
+        const quality = options.pdfQuality || 0.95;
         const jpegData = pageCanvas.toDataURL('image/jpeg', quality);
         const jpegBinary = atob(jpegData.split(',')[1]);
 
-        // Add image XObject
+        // Add image XObject (use high-res dimensions)
         const imageId = addObject(
-          `<< /Type /XObject /Subtype /Image /Width ${Math.round(contentWidth)} /Height ${Math.round(contentHeight)} ` +
+          `<< /Type /XObject /Subtype /Image /Width ${renderWidth} /Height ${renderHeight} ` +
           `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBinary.length} >>\n` +
           `stream\n${jpegBinary}\nendstream`
         );
@@ -1495,8 +1513,8 @@
         // Build page content
         let contentStr = '';
 
-        // Draw image
-        contentStr += `q ${contentWidth} 0 0 ${contentHeight} ${margin} ${margin + footerHeight} cm /Img${page} Do Q\n`;
+        // Draw image (scale high-res image to PDF content area)
+        contentStr += `q ${pdfContentWidth} 0 0 ${pdfContentHeight} ${margin} ${margin + footerHeight} cm /Img${page} Do Q\n`;
 
         // Draw header
         if (options.showHeader && options.header) {
