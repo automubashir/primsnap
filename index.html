@@ -1365,6 +1365,59 @@
       margin: 0 auto;
     }
 
+    .preset-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .preset-label {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .preset-btn {
+      padding: 8px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--primary);
+      color: var(--text);
+    }
+
+    .preset-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .preset-btn[data-preset="cube3d"] {
+      position: relative;
+    }
+
+    .preset-btn[data-preset="cube3d"]::after {
+      content: '3D';
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #ef4444;
+      color: white;
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
     .playground-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -2247,6 +2300,13 @@
         <div class="playground-header">
           <h2>Live Playground</h2>
           <p>Write your own HTML, CSS, and JavaScript to see how PrimSnap captures it.</p>
+          <div class="preset-buttons">
+            <span class="preset-label">Examples:</span>
+            <button class="preset-btn active" data-preset="card">Gradient Card</button>
+            <button class="preset-btn" data-preset="cube3d">3D Cube</button>
+            <button class="preset-btn" data-preset="glassmorphism">Glassmorphism</button>
+            <button class="preset-btn" data-preset="shadows">Complex Shadows</button>
+          </div>
         </div>
         <div class="playground-container">
           <!-- Editor Panel -->
@@ -2810,6 +2870,334 @@ if (btn) {
       cssEditor.addEventListener('input', debouncedUpdate);
       jsEditor.addEventListener('input', debouncedUpdate);
 
+      // Preset examples
+      const presets = {
+        card: {
+          html: `<div class="card">
+  <div class="card-header">
+    <div class="avatar">PS</div>
+    <div class="info">
+      <h3>PrimSnap Demo</h3>
+      <span>Live Playground</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <p>This is a live preview. Edit the code to see changes!</p>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value">99%</span>
+        <span class="stat-label">Accuracy</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Dependencies</span>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <button class="btn-gradient">Capture This</button>
+  </div>
+</div>`,
+          css: `.card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 24px;
+  color: white;
+  font-family: system-ui, sans-serif;
+  max-width: 320px;
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.info h3 { margin: 0 0 4px; font-size: 18px; }
+.info span { opacity: 0.8; font-size: 13px; }
+.card-body p { margin: 0 0 16px; opacity: 0.9; line-height: 1.5; }
+.stats { display: flex; gap: 24px; }
+.stat { display: flex; flex-direction: column; }
+.stat-value { font-size: 28px; font-weight: 700; }
+.stat-label { font-size: 12px; opacity: 0.7; text-transform: uppercase; }
+.card-footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2); }
+.btn-gradient {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: none;
+  border-radius: 8px;
+  color: #764ba2;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}`,
+          js: `// Click handler for button
+const btn = document.querySelector('.btn-gradient');
+if (btn) {
+  btn.addEventListener('click', () => {
+    btn.textContent = 'Captured!';
+    setTimeout(() => btn.textContent = 'Capture This', 1000);
+  });
+}`
+        },
+        cube3d: {
+          html: `<div class="scene">
+  <div class="cube">
+    <div class="face front">Front</div>
+    <div class="face back">Back</div>
+    <div class="face right">Right</div>
+    <div class="face left">Left</div>
+    <div class="face top">Top</div>
+    <div class="face bottom">Bottom</div>
+  </div>
+</div>
+<p class="warning">⚠️ 3D transforms cannot be captured accurately with SVG-based methods. Use <code>useScreenCapture: true</code> for 3D content.</p>`,
+          css: `* { transform-style: preserve-3d; }
+
+.scene {
+  width: 200px;
+  height: 200px;
+  perspective: 600px;
+  margin: 40px auto;
+}
+
+.cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform: rotateX(-20deg) rotateY(30deg);
+  animation: rotate 10s infinite linear;
+}
+
+@keyframes rotate {
+  from { transform: rotateX(-20deg) rotateY(0deg); }
+  to { transform: rotateX(-20deg) rotateY(360deg); }
+}
+
+.face {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  border: 2px solid rgba(255,255,255,0.3);
+  backface-visibility: visible;
+}
+
+.front  { background: rgba(255, 0, 0, 0.8); transform: translateZ(100px); }
+.back   { background: rgba(0, 255, 0, 0.8); transform: rotateY(180deg) translateZ(100px); }
+.right  { background: rgba(0, 0, 255, 0.8); transform: rotateY(90deg) translateZ(100px); }
+.left   { background: rgba(255, 255, 0, 0.8); transform: rotateY(-90deg) translateZ(100px); }
+.top    { background: rgba(255, 0, 255, 0.8); transform: rotateX(90deg) translateZ(100px); }
+.bottom { background: rgba(0, 255, 255, 0.8); transform: rotateX(-90deg) translateZ(100px); }
+
+.warning {
+  text-align: center;
+  margin-top: 20px;
+  padding: 12px;
+  background: #fef3c7;
+  border-radius: 8px;
+  color: #92400e;
+  font-size: 13px;
+}
+.warning code {
+  background: #fde68a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}`,
+          js: `// 3D CSS transforms require special handling
+// SVG foreignObject flattens 3D - this is a browser limitation
+// Use PrimSnap.captureScreen() for accurate 3D capture`
+        },
+        glassmorphism: {
+          html: `<div class="glass-container">
+  <div class="glass-card">
+    <div class="glass-icon">✨</div>
+    <h2>Glassmorphism</h2>
+    <p>Beautiful frosted glass effect with backdrop-filter</p>
+    <button class="glass-btn">Explore</button>
+  </div>
+</div>`,
+          css: `.glass-container {
+  width: 400px;
+  height: 300px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-container::before {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  top: -50px;
+  left: -50px;
+}
+
+.glass-container::after {
+  content: '';
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  bottom: -30px;
+  right: -30px;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+.glass-icon { font-size: 48px; margin-bottom: 16px; }
+.glass-card h2 { margin: 0 0 12px; font-size: 24px; }
+.glass-card p { margin: 0 0 20px; opacity: 0.9; font-size: 14px; }
+
+.glass-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.glass-btn:hover { background: rgba(255,255,255,0.3); }`,
+          js: `// Glassmorphism uses backdrop-filter
+// PrimSnap captures this accurately!`
+        },
+        shadows: {
+          html: `<div class="shadow-showcase">
+  <div class="card shadow-soft">
+    <h3>Soft Shadow</h3>
+    <p>Subtle elevation</p>
+  </div>
+  <div class="card shadow-layered">
+    <h3>Layered Shadow</h3>
+    <p>Multiple shadows</p>
+  </div>
+  <div class="card shadow-colored">
+    <h3>Colored Shadow</h3>
+    <p>Brand color glow</p>
+  </div>
+</div>`,
+          css: `.shadow-showcase {
+  display: flex;
+  gap: 20px;
+  padding: 40px;
+  font-family: system-ui, sans-serif;
+}
+
+.card {
+  width: 160px;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #1a1a2e;
+}
+
+.card p {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1),
+              0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+.shadow-layered {
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08),
+              0 2px 2px rgba(0,0,0,0.08),
+              0 4px 4px rgba(0,0,0,0.08),
+              0 8px 8px rgba(0,0,0,0.08),
+              0 16px 16px rgba(0,0,0,0.08);
+}
+
+.shadow-colored {
+  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4),
+              0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.shadow-colored:hover {
+  box-shadow: 0 20px 50px rgba(99, 102, 241, 0.5),
+              0 0 0 1px rgba(99, 102, 241, 0.2);
+}`,
+          js: `// Complex box shadows are captured perfectly
+// Hover over the cards to see the transitions`
+        }
+      };
+
+      // Load preset
+      function loadPreset(name) {
+        const preset = presets[name];
+        if (!preset) return;
+
+        htmlEditor.value = preset.html;
+        cssEditor.value = preset.css;
+        jsEditor.value = preset.js;
+        updatePreview();
+
+        // Update active button
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.preset === name);
+        });
+      }
+
+      // Preset button click handlers
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => loadPreset(btn.dataset.preset));
+      });
+
       // Refresh button
       document.getElementById('playground-refresh').addEventListener('click', updatePreview);
 
@@ -2829,10 +3217,18 @@ if (btn) {
             throw new Error('No content to capture');
           }
 
+          // Check for 3D transforms and warn
+          const has3D = PrimSnap.detect3D(targetElement);
+          if (has3D.length > 0) {
+            console.warn('3D transforms detected - capture may not be accurate');
+          }
+
           // Capture using PrimSnap on the iframe content
           const dataUrl = await PrimSnap.capture(targetElement, {
             scale: 2,
-            backgroundColor: '#f5f5f5'
+            backgroundColor: '#f5f5f5',
+            warn3D: true,
+            onWarning: (warn) => console.warn('PrimSnap Warning:', warn.message)
           });
 
           // Show result

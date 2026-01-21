@@ -67,9 +67,14 @@
     timeout: 30000,
     preserveWhitespace: true,   // Prevent text wrapping issues
 
+    // 3D/Experimental
+    useScreenCapture: false,    // Use Screen Capture API for 3D content (requires permission)
+    warn3D: true,               // Warn when 3D transforms detected
+
     // Callbacks
     onClone: null,
     onProgress: null,
+    onWarning: null,            // Callback for warnings (3D detected, etc.)
     debug: false
   };
 
@@ -288,6 +293,212 @@
         return size;
       }
       return PAGE_SIZES[size] || null;
+    },
+
+    // Trigger warning callback
+    warn(options, type, message, details = {}) {
+      Utils.log(options, `WARNING [${type}]:`, message);
+      if (typeof options.onWarning === 'function') {
+        options.onWarning({ type, message, details });
+      }
+    }
+  };
+
+  // ============================================================================
+  // 3D TRANSFORM DETECTOR
+  // ============================================================================
+
+  const Transform3DDetector = {
+    // CSS properties that indicate 3D rendering
+    TRANSFORM_3D_KEYWORDS: [
+      'rotateX', 'rotateY', 'rotateZ', 'rotate3d',
+      'translateZ', 'translate3d',
+      'scaleZ', 'scale3d',
+      'perspective', 'matrix3d'
+    ],
+
+    /**
+     * Check if an element or its children use 3D transforms
+     */
+    detect(element, options = {}) {
+      const issues = [];
+      this._scan(element, issues);
+
+      if (issues.length > 0 && options.warn3D) {
+        Utils.warn(options, '3D_TRANSFORMS_DETECTED',
+          `Detected ${issues.length} element(s) with 3D CSS transforms. ` +
+          `SVG-based capture cannot render 3D transforms accurately. ` +
+          `Consider using useScreenCapture: true for accurate 3D capture (requires user permission).`,
+          { elements: issues }
+        );
+      }
+
+      return issues;
+    },
+
+    _scan(element, issues) {
+      if (!(element instanceof Element)) return;
+
+      const style = window.getComputedStyle(element);
+
+      // Check transform property
+      const transform = style.transform || style.webkitTransform;
+      if (transform && transform !== 'none') {
+        for (const keyword of this.TRANSFORM_3D_KEYWORDS) {
+          if (transform.includes(keyword)) {
+            issues.push({
+              element,
+              property: 'transform',
+              value: transform,
+              keyword
+            });
+            break;
+          }
+        }
+      }
+
+      // Check transform-style: preserve-3d
+      const transformStyle = style.transformStyle || style.webkitTransformStyle;
+      if (transformStyle === 'preserve-3d') {
+        issues.push({
+          element,
+          property: 'transform-style',
+          value: transformStyle
+        });
+      }
+
+      // Check perspective
+      const perspective = style.perspective || style.webkitPerspective;
+      if (perspective && perspective !== 'none' && perspective !== '0px') {
+        issues.push({
+          element,
+          property: 'perspective',
+          value: perspective
+        });
+      }
+
+      // Recursively check children
+      for (const child of element.children) {
+        this._scan(child, issues);
+      }
+
+      // Check Shadow DOM
+      if (element.shadowRoot) {
+        for (const child of element.shadowRoot.children) {
+          this._scan(child, issues);
+        }
+      }
+    },
+
+    /**
+     * Check if Screen Capture API is supported
+     */
+    isScreenCaptureSupported() {
+      return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+    }
+  };
+
+  // ============================================================================
+  // SCREEN CAPTURE API (Experimental - for 3D content)
+  // ============================================================================
+
+  const ScreenCapture = {
+    /**
+     * Capture element using Screen Capture API
+     * This captures the actual rendered pixels, including 3D transforms
+     * Requires user permission and element must be visible on screen
+     */
+    async capture(element, options = {}) {
+      if (!Transform3DDetector.isScreenCaptureSupported()) {
+        throw new Error('Screen Capture API is not supported in this browser');
+      }
+
+      const rect = element.getBoundingClientRect();
+
+      // Element must be visible in viewport
+      if (rect.top < 0 || rect.left < 0 ||
+          rect.bottom > window.innerHeight ||
+          rect.right > window.innerWidth) {
+        Utils.warn(options, 'ELEMENT_NOT_VISIBLE',
+          'Element must be fully visible on screen for Screen Capture. ' +
+          'Scroll to make the element visible.',
+          { rect }
+        );
+      }
+
+      let stream = null;
+      try {
+        // Request screen capture permission
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            displaySurface: 'browser',
+            cursor: 'never'
+          },
+          audio: false,
+          preferCurrentTab: true  // Chrome 109+
+        });
+
+        // Wait a frame for the capture to stabilize
+        await new Promise(r => setTimeout(r, 100));
+
+        // Create video element to capture frame
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.muted = true;
+        await video.play();
+
+        // Create canvas and draw the video frame
+        const canvas = document.createElement('canvas');
+        const scale = options.scale || window.devicePixelRatio || 1;
+
+        canvas.width = Math.ceil(rect.width * scale);
+        canvas.height = Math.ceil(rect.height * scale);
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+
+        // Calculate the position of the element in the captured screen
+        // Note: This is approximate and depends on browser chrome, scroll position, etc.
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
+
+        // Draw only the element's region
+        ctx.drawImage(
+          video,
+          rect.left * scale, rect.top * scale, // Source position
+          rect.width * scale, rect.height * scale, // Source size
+          0, 0, // Destination position
+          rect.width, rect.height // Destination size
+        );
+
+        // Stop the stream
+        stream.getTracks().forEach(track => track.stop());
+
+        // Export based on format
+        const format = options.format || 'png';
+        const quality = options.quality || 0.95;
+
+        switch (format) {
+          case 'png': return canvas.toDataURL('image/png');
+          case 'jpeg':
+          case 'jpg': return canvas.toDataURL('image/jpeg', quality);
+          case 'webp': return canvas.toDataURL('image/webp', quality);
+          case 'blob': return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          case 'canvas': return canvas;
+          default: return canvas.toDataURL('image/png');
+        }
+
+      } catch (error) {
+        // Make sure to stop the stream on error
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+
+        if (error.name === 'NotAllowedError') {
+          throw new Error('Screen capture permission denied by user');
+        }
+        throw error;
+      }
     }
   };
 
@@ -1481,6 +1692,23 @@
         throw new Error('PrimSnap: Element not found');
       }
 
+      // Detect 3D transforms
+      const transform3DElements = Transform3DDetector.detect(element, opts);
+      const has3D = transform3DElements.length > 0;
+
+      // If useScreenCapture is requested (or auto-detect with 3D), use Screen Capture API
+      if (opts.useScreenCapture) {
+        this.progress(opts, 0.1, 'Using Screen Capture API...');
+        try {
+          return await ScreenCapture.capture(element, opts);
+        } catch (error) {
+          if (opts.debug) {
+            console.warn('PrimSnap: Screen Capture failed, falling back to SVG method:', error.message);
+          }
+          // Fall through to standard capture
+        }
+      }
+
       // Inject custom CSS
       let injectedStyle = null;
       if (opts.injectCSS) {
@@ -1633,6 +1861,42 @@
      */
     async toDataUri(url) {
       return Utils.toDataUri(url, { useCORS: true });
+    },
+
+    /**
+     * Detect 3D transforms in an element
+     * Returns array of elements with 3D CSS transforms
+     */
+    detect3D(selector) {
+      const element = typeof selector === 'string'
+        ? document.querySelector(selector)
+        : selector;
+
+      if (!element) return [];
+      return Transform3DDetector.detect(element, { warn3D: false });
+    },
+
+    /**
+     * Check if Screen Capture API is supported
+     */
+    isScreenCaptureSupported() {
+      return Transform3DDetector.isScreenCaptureSupported();
+    },
+
+    /**
+     * Capture using Screen Capture API (for 3D content)
+     * Requires user permission - element must be visible on screen
+     */
+    async captureScreen(selector, options = {}) {
+      const element = typeof selector === 'string'
+        ? document.querySelector(selector)
+        : selector;
+
+      if (!element) {
+        throw new Error('PrimSnap: Element not found');
+      }
+
+      return ScreenCapture.capture(element, options);
     },
 
     /**
