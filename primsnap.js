@@ -1785,10 +1785,13 @@
      * Automatically paginates long content with headers/footers
      */
     async toPDF(selector, filename = 'capture.pdf', options = {}) {
+      // Capture WITHOUT header/footer - PDF generator adds its own text-based ones
       const canvas = await this.capture(selector, {
         ...options,
         format: 'canvas',
-        scale: options.scale || 2
+        scale: options.scale || 2,
+        showHeader: false,  // Don't render visual header in capture
+        showFooter: false   // Don't render visual footer in capture
       });
 
       const pdfOptions = {

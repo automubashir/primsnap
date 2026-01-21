@@ -654,6 +654,8 @@
     .capture-body {
       padding: 24px;
       background: white;
+      max-height: 600px;
+      overflow-y: auto;
     }
 
     /* ============================================================================
@@ -2057,7 +2059,9 @@
       if (id === 'toggle-header') options.showHeader = el.classList.contains('active');
       if (id === 'toggle-footer') options.showFooter = el.classList.contains('active');
       if (id === 'toggle-break') {
-        options.avoidBreakInside = el.classList.contains('active') ? ['.section', '.stats-row'] : [];
+        options.avoidBreakInside = el.classList.contains('active')
+          ? ['.section', '.stats-row', '.demo-row', '.demo-item', '.clip-row', '.clip-item', '.filter-row', '.filter-item', '.shadow-row', '.shadow-item', '.gradient-row', '.gradient-item', '.progress-item', '.data-table', 'tr', 'thead', 'tbody']
+          : [];
       }
     }
 
