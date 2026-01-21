@@ -354,8 +354,8 @@
 
     .demo-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
       align-items: start;
     }
 
@@ -370,15 +370,35 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 28px;
-      position: sticky;
-      top: 96px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      height: 680px;
+      overflow-y: auto;
+    }
+
+    /* Custom scrollbar for controls panel */
+    .controls-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .controls-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .controls-panel::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .controls-panel::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
     }
 
     .controls-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -387,21 +407,21 @@
     .controls-title::before {
       content: '';
       width: 4px;
-      height: 20px;
+      height: 18px;
       background: var(--gradient-primary);
       border-radius: 2px;
     }
 
     .control-group {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .control-label {
       display: block;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -409,25 +429,25 @@
     .control-buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .control-btn {
       flex: 1;
-      min-width: 120px;
-      padding: 12px 16px;
+      min-width: 70px;
+      padding: 10px 12px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text-primary);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .control-btn:hover {
@@ -442,20 +462,17 @@
 
     .action-buttons {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 32px;
-    }
-
-    .action-buttons .action-btn {
-      flex: 1 1 calc(50% - 6px);
-      min-width: 140px;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
     }
 
     .action-btn {
-      padding: 14px 20px;
-      border-radius: var(--radius);
-      font-size: 14px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -464,12 +481,12 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      width: 100%;
     }
 
     .action-btn-primary {
       background: var(--gradient-primary);
       color: white;
-      grid-column: span 2;
     }
 
     .action-btn-primary:hover {
@@ -501,17 +518,17 @@
     .mode-selector {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
 
     .mode-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px 12px;
+      padding: 14px 10px;
       background: var(--bg-elevated);
       border: 2px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -527,18 +544,18 @@
     }
 
     .mode-icon {
-      font-size: 24px;
-      margin-bottom: 6px;
+      font-size: 20px;
+      margin-bottom: 4px;
     }
 
     .mode-text {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--text-primary);
     }
 
     .mode-desc {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
       margin-top: 2px;
     }
@@ -546,12 +563,12 @@
     /* Control Input */
     .control-input {
       width: 100%;
-      padding: 12px 16px;
+      padding: 10px 12px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text-primary);
-      font-size: 14px;
+      font-size: 13px;
       font-family: inherit;
       transition: all 0.2s;
     }
@@ -569,7 +586,7 @@
     /* Options */
     .options-grid {
       display: grid;
-      gap: 16px;
+      gap: 12px;
     }
 
     .option-row {
@@ -579,18 +596,19 @@
     }
 
     .option-label {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-secondary);
     }
 
     .toggle {
       position: relative;
-      width: 44px;
-      height: 24px;
+      width: 40px;
+      height: 22px;
       background: var(--bg-elevated);
-      border-radius: 12px;
+      border-radius: 11px;
       cursor: pointer;
       transition: all 0.2s;
+      flex-shrink: 0;
     }
 
     .toggle.active {
@@ -602,15 +620,15 @@
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       background: white;
       border-radius: 50%;
       transition: all 0.2s;
     }
 
     .toggle.active::after {
-      left: 22px;
+      left: 20px;
     }
 
     /* Capture Target */
@@ -619,19 +637,30 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 680px;
+    }
+
+    @media (max-width: 1024px) {
+      .controls-panel,
+      .capture-panel {
+        height: 500px;
+      }
     }
 
     .capture-header {
-      padding: 16px 24px;
+      padding: 12px 20px;
       background: var(--bg-elevated);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
     }
 
     .capture-header-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--text-secondary);
     }
@@ -642,8 +671,8 @@
     }
 
     .capture-header-dot {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
     }
 
@@ -652,10 +681,30 @@
     .capture-header-dot:nth-child(3) { background: #10b981; }
 
     .capture-body {
-      padding: 24px;
+      padding: 20px;
       background: white;
-      max-height: 600px;
+      flex: 1;
       overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Custom scrollbar for capture body */
+    .capture-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .capture-body::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .capture-body::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+
+    .capture-body::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a1;
     }
 
     /* ============================================================================
