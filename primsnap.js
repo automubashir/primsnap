@@ -1095,14 +1095,23 @@
   };
 
   // ============================================================================
-  // PREVIEW MODAL
+  // PREVIEW MODAL WITH ZOOM/PAN
   // ============================================================================
 
   const PreviewModal = {
     modal: null,
+    zoom: 1,
+    panX: 0,
+    panY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
 
     show(dataUrl, options = {}) {
       this.hide();
+      this.zoom = 1;
+      this.panX = 0;
+      this.panY = 0;
 
       const modal = document.createElement('div');
       modal.id = 'primsnap-modal';
@@ -1111,13 +1120,25 @@
           <div class="primsnap-container">
             <div class="primsnap-header">
               <h3>${options.title || 'Preview'}</h3>
+              <div class="primsnap-zoom-controls">
+                <button class="primsnap-zoom-btn" data-action="zoom-out" title="Zoom Out">−</button>
+                <span class="primsnap-zoom-level">100%</span>
+                <button class="primsnap-zoom-btn" data-action="zoom-in" title="Zoom In">+</button>
+                <button class="primsnap-zoom-btn" data-action="zoom-reset" title="Reset">⟲</button>
+                <button class="primsnap-zoom-btn" data-action="zoom-fit" title="Fit to Screen">⊡</button>
+              </div>
               <div class="primsnap-actions">
                 <button class="primsnap-btn primsnap-btn-secondary" data-action="close">Cancel</button>
                 <button class="primsnap-btn primsnap-btn-primary" data-action="download">Download</button>
               </div>
             </div>
             <div class="primsnap-body">
-              <img src="${dataUrl}" alt="Preview">
+              <div class="primsnap-viewer">
+                <img src="${dataUrl}" alt="Preview" draggable="false">
+              </div>
+            </div>
+            <div class="primsnap-footer">
+              <span class="primsnap-hint">Scroll to zoom • Drag to pan • Double-click to reset</span>
             </div>
           </div>
         </div>
@@ -1134,7 +1155,7 @@
         .primsnap-overlay {
           width: 100%;
           height: 100%;
-          background: rgba(0, 0, 0, 0.9);
+          background: rgba(0, 0, 0, 0.95);
           backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
@@ -1145,8 +1166,8 @@
           background: #1a1a2e;
           border-radius: 16px;
           width: 100%;
-          max-width: 1000px;
-          max-height: 90vh;
+          max-width: 1200px;
+          max-height: 95vh;
           display: flex;
           flex-direction: column;
           box-shadow: 0 25px 100px rgba(0, 0, 0, 0.5);
@@ -1160,14 +1181,48 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 20px 24px;
+          padding: 16px 24px;
           border-bottom: 1px solid rgba(255,255,255,0.1);
+          gap: 16px;
         }
         .primsnap-header h3 {
           margin: 0;
           color: #fff;
           font-size: 18px;
           font-weight: 600;
+          white-space: nowrap;
+        }
+        .primsnap-zoom-controls {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255,255,255,0.05);
+          padding: 6px 12px;
+          border-radius: 8px;
+        }
+        .primsnap-zoom-btn {
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        .primsnap-zoom-btn:hover {
+          background: rgba(99, 102, 241, 0.5);
+        }
+        .primsnap-zoom-level {
+          color: #a1a1aa;
+          font-size: 13px;
+          min-width: 50px;
+          text-align: center;
+          font-weight: 500;
         }
         .primsnap-actions {
           display: flex;
@@ -1200,19 +1255,40 @@
         }
         .primsnap-body {
           flex: 1;
-          overflow: auto;
-          padding: 24px;
+          overflow: hidden;
           background: #0f0f1a;
-          border-radius: 0 0 16px 16px;
+          position: relative;
+          min-height: 400px;
+        }
+        .primsnap-viewer {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          cursor: grab;
           display: flex;
           align-items: center;
           justify-content: center;
+          position: absolute;
+          inset: 0;
         }
-        .primsnap-body img {
-          max-width: 100%;
-          max-height: 70vh;
-          border-radius: 8px;
+        .primsnap-viewer.dragging {
+          cursor: grabbing;
+        }
+        .primsnap-viewer img {
+          transform-origin: center center;
+          transition: transform 0.1s ease-out;
           box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+          border-radius: 4px;
+          user-select: none;
+        }
+        .primsnap-footer {
+          padding: 12px 24px;
+          border-top: 1px solid rgba(255,255,255,0.1);
+          border-radius: 0 0 16px 16px;
+        }
+        .primsnap-hint {
+          color: #6b7280;
+          font-size: 12px;
         }
       `;
 
@@ -1221,7 +1297,87 @@
       document.body.style.overflow = 'hidden';
       this.modal = modal;
 
-      // Events
+      const viewer = modal.querySelector('.primsnap-viewer');
+      const img = viewer.querySelector('img');
+      const zoomLevel = modal.querySelector('.primsnap-zoom-level');
+
+      const updateTransform = () => {
+        img.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
+        zoomLevel.textContent = Math.round(this.zoom * 100) + '%';
+      };
+
+      const setZoom = (newZoom, centerX, centerY) => {
+        const oldZoom = this.zoom;
+        this.zoom = Math.max(0.1, Math.min(10, newZoom));
+
+        if (centerX !== undefined && centerY !== undefined) {
+          const rect = viewer.getBoundingClientRect();
+          const x = centerX - rect.left - rect.width / 2;
+          const y = centerY - rect.top - rect.height / 2;
+          this.panX -= x * (this.zoom / oldZoom - 1);
+          this.panY -= y * (this.zoom / oldZoom - 1);
+        }
+
+        updateTransform();
+      };
+
+      // Zoom controls
+      modal.querySelector('[data-action="zoom-in"]').onclick = () => setZoom(this.zoom * 1.25);
+      modal.querySelector('[data-action="zoom-out"]').onclick = () => setZoom(this.zoom / 1.25);
+      modal.querySelector('[data-action="zoom-reset"]').onclick = () => {
+        this.zoom = 1;
+        this.panX = 0;
+        this.panY = 0;
+        updateTransform();
+      };
+      modal.querySelector('[data-action="zoom-fit"]').onclick = () => {
+        const rect = viewer.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+        const scaleX = (rect.width - 48) / (imgRect.width / this.zoom);
+        const scaleY = (rect.height - 48) / (imgRect.height / this.zoom);
+        this.zoom = Math.min(scaleX, scaleY, 1);
+        this.panX = 0;
+        this.panY = 0;
+        updateTransform();
+      };
+
+      // Mouse wheel zoom
+      viewer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        setZoom(this.zoom * delta, e.clientX, e.clientY);
+      }, { passive: false });
+
+      // Pan with drag
+      viewer.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        this.isDragging = true;
+        this.startX = e.clientX - this.panX;
+        this.startY = e.clientY - this.panY;
+        viewer.classList.add('dragging');
+      });
+
+      document.addEventListener('mousemove', this._onMouseMove = (e) => {
+        if (!this.isDragging) return;
+        this.panX = e.clientX - this.startX;
+        this.panY = e.clientY - this.startY;
+        updateTransform();
+      });
+
+      document.addEventListener('mouseup', this._onMouseUp = () => {
+        this.isDragging = false;
+        viewer.classList.remove('dragging');
+      });
+
+      // Double-click to reset
+      viewer.addEventListener('dblclick', () => {
+        this.zoom = 1;
+        this.panX = 0;
+        this.panY = 0;
+        updateTransform();
+      });
+
+      // Close/Download buttons
       modal.querySelector('[data-action="close"]').onclick = () => this.hide();
       modal.querySelector('[data-action="download"]').onclick = () => {
         if (options.onDownload) options.onDownload();
@@ -1242,10 +1398,189 @@
 
     hide() {
       if (this.modal) {
+        document.removeEventListener('mousemove', this._onMouseMove);
+        document.removeEventListener('mouseup', this._onMouseUp);
         this.modal.remove();
         this.modal = null;
         document.body.style.overflow = '';
       }
+    }
+  };
+
+  // ============================================================================
+  // PDF GENERATOR (Image-based)
+  // ============================================================================
+
+  const PDFGenerator = {
+    /**
+     * Generate PDF from screenshot with pagination
+     * Creates a proper PDF file with multiple pages
+     */
+    async generate(canvas, options) {
+      Utils.log(options, 'Generating PDF...');
+
+      const pageSize = Utils.getPageSize(options.pageSize) || PAGE_SIZES['A4'];
+      const headerHeight = options.showHeader ? (options.header?.height || 40) : 0;
+      const footerHeight = options.showFooter ? (options.footer?.height || 40) : 0;
+      const margin = options.pdfMargin || 40;
+
+      // Calculate content area per page
+      const contentWidth = pageSize.width - (margin * 2);
+      const contentHeight = pageSize.height - (margin * 2) - headerHeight - footerHeight;
+
+      // Calculate how many pages we need
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const scale = contentWidth / imgWidth;
+      const scaledHeight = imgHeight * scale;
+      const totalPages = Math.ceil(scaledHeight / contentHeight);
+
+      // Create PDF structure (minimal PDF 1.4)
+      const objects = [];
+      let objectId = 1;
+
+      // Helper to add object
+      const addObject = (content) => {
+        const id = objectId++;
+        objects.push({ id, content });
+        return id;
+      };
+
+      // Catalog
+      const catalogId = addObject(null); // placeholder
+      const pagesId = addObject(null); // placeholder
+
+      // Font
+      const fontId = addObject(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
+
+      // Convert canvas to JPEG for each page slice
+      const pageIds = [];
+      const imageIds = [];
+
+      for (let page = 0; page < totalPages; page++) {
+        // Create canvas for this page slice
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = contentWidth;
+        pageCanvas.height = contentHeight;
+        const ctx = pageCanvas.getContext('2d');
+
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, contentWidth, contentHeight);
+
+        // Calculate source region
+        const sourceY = (page * contentHeight) / scale;
+        const sourceHeight = contentHeight / scale;
+
+        // Draw the slice
+        ctx.drawImage(
+          canvas,
+          0, sourceY, imgWidth, Math.min(sourceHeight, imgHeight - sourceY),
+          0, 0, contentWidth, Math.min(contentHeight, (imgHeight - sourceY) * scale)
+        );
+
+        // Get JPEG data
+        const jpegData = pageCanvas.toDataURL('image/jpeg', 0.92);
+        const jpegBinary = atob(jpegData.split(',')[1]);
+
+        // Add image XObject
+        const imageId = addObject(
+          `<< /Type /XObject /Subtype /Image /Width ${Math.round(contentWidth)} /Height ${Math.round(contentHeight)} ` +
+          `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBinary.length} >>\n` +
+          `stream\n${jpegBinary}\nendstream`
+        );
+        imageIds.push(imageId);
+
+        // Build page content
+        let contentStr = '';
+
+        // Draw image
+        contentStr += `q ${contentWidth} 0 0 ${contentHeight} ${margin} ${margin + footerHeight} cm /Img${page} Do Q\n`;
+
+        // Draw header
+        if (options.showHeader && options.header) {
+          const headerText = HeaderFooterGenerator.processTemplate(
+            typeof options.header === 'string' ? options.header : (options.header.text || ''),
+            page + 1, totalPages
+          ).replace(/<[^>]*>/g, ''); // Strip HTML tags
+          contentStr += `BT /F1 10 Tf ${margin} ${pageSize.height - margin - 12} Td (${this.escapeText(headerText)}) Tj ET\n`;
+        }
+
+        // Draw footer
+        if (options.showFooter && options.footer) {
+          const footerText = HeaderFooterGenerator.processTemplate(
+            typeof options.footer === 'string' ? options.footer : (options.footer.text || ''),
+            page + 1, totalPages
+          ).replace(/<[^>]*>/g, '');
+          contentStr += `BT /F1 10 Tf ${margin} ${margin - 5 + footerHeight/2} Td (${this.escapeText(footerText)}) Tj ET\n`;
+        }
+
+        // Page number on right side of footer
+        const pageNumText = `Page ${page + 1} of ${totalPages}`;
+        contentStr += `BT /F1 9 Tf ${pageSize.width - margin - 80} ${margin - 5 + footerHeight/2} Td (${pageNumText}) Tj ET\n`;
+
+        const contentId = addObject(`<< /Length ${contentStr.length} >>\nstream\n${contentStr}endstream`);
+
+        // Page object
+        const pageId = addObject(
+          `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pageSize.width} ${pageSize.height}] ` +
+          `/Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontId} 0 R >> ` +
+          `/XObject << /Img${page} ${imageId} 0 R >> >> >>`
+        );
+        pageIds.push(pageId);
+      }
+
+      // Update catalog
+      objects[catalogId - 1].content = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+
+      // Update pages
+      objects[pagesId - 1].content = `<< /Type /Pages /Kids [${pageIds.map(id => id + ' 0 R').join(' ')}] /Count ${totalPages} >>`;
+
+      // Build PDF
+      let pdf = '%PDF-1.4\n%âãÏÓ\n';
+      const offsets = [];
+
+      for (const obj of objects) {
+        offsets.push(pdf.length);
+        pdf += `${obj.id} 0 obj\n${obj.content}\nendobj\n`;
+      }
+
+      // Cross-reference table
+      const xrefOffset = pdf.length;
+      pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+      for (const offset of offsets) {
+        pdf += offset.toString().padStart(10, '0') + ' 00000 n \n';
+      }
+
+      // Trailer
+      pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+      return pdf;
+    },
+
+    escapeText(text) {
+      return text.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+    },
+
+    /**
+     * Download PDF
+     */
+    download(pdf, filename) {
+      // Convert to binary
+      const bytes = new Uint8Array(pdf.length);
+      for (let i = 0; i < pdf.length; i++) {
+        bytes[i] = pdf.charCodeAt(i) & 0xff;
+      }
+
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -1424,6 +1759,49 @@
      */
     getPageSizes() {
       return { ...PAGE_SIZES };
+    },
+
+    /**
+     * Generate and download PDF from screenshot
+     * Automatically paginates long content with headers/footers
+     */
+    async toPDF(selector, filename = 'capture.pdf', options = {}) {
+      const canvas = await this.capture(selector, {
+        ...options,
+        format: 'canvas',
+        scale: options.scale || 2
+      });
+
+      const pdfOptions = {
+        ...DEFAULTS,
+        ...options,
+        showHeader: options.showHeader !== false,
+        showFooter: options.showFooter !== false,
+        header: options.header || { text: '{title}', height: 30 },
+        footer: options.footer || { text: 'Generated with PrimSnap', height: 30 }
+      };
+
+      const pdf = await PDFGenerator.generate(canvas, pdfOptions);
+      PDFGenerator.download(pdf, filename);
+    },
+
+    /**
+     * Preview and optionally download as PDF
+     */
+    async previewPDF(selector, options = {}) {
+      const dataUrl = await this.capture(selector, {
+        ...options,
+        format: 'png'
+      });
+
+      PreviewModal.show(dataUrl, {
+        title: options.title || 'PDF Preview',
+        onDownload: async () => {
+          await this.toPDF(selector, options.filename || 'capture.pdf', options);
+        }
+      });
+
+      return dataUrl;
     }
   };
 

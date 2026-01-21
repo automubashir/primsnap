@@ -492,6 +492,75 @@
       box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
     }
 
+    /* Mode Selector */
+    .mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .mode-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px;
+      background: var(--bg-elevated);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .mode-btn.active {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    .mode-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .mode-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .mode-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Control Input */
+    .control-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .control-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .control-input::placeholder {
+      color: var(--text-muted);
+    }
+
     /* Options */
     .options-grid {
       display: grid;
@@ -1289,21 +1358,63 @@
           <div class="controls-panel">
             <h3 class="controls-title">Capture Options</h3>
 
+            <!-- Output Mode Selector -->
             <div class="control-group">
-              <label class="control-label">Format</label>
-              <div class="control-buttons">
-                <button class="control-btn active" data-format="png">PNG</button>
-                <button class="control-btn" data-format="jpeg">JPEG</button>
-                <button class="control-btn" data-format="webp">WebP</button>
+              <label class="control-label">Output Mode</label>
+              <div class="mode-selector">
+                <button class="mode-btn active" data-mode="image" onclick="setMode('image')">
+                  <span class="mode-icon">🖼️</span>
+                  <span class="mode-text">Image</span>
+                  <span class="mode-desc">PNG, JPEG, WebP</span>
+                </button>
+                <button class="mode-btn" data-mode="pdf" onclick="setMode('pdf')">
+                  <span class="mode-icon">📄</span>
+                  <span class="mode-text">PDF</span>
+                  <span class="mode-desc">Multi-page with headers</span>
+                </button>
               </div>
             </div>
 
-            <div class="control-group">
-              <label class="control-label">Scale</label>
-              <div class="control-buttons">
-                <button class="control-btn" data-scale="1">1x</button>
-                <button class="control-btn active" data-scale="2">2x</button>
-                <button class="control-btn" data-scale="3">3x</button>
+            <!-- Image Options (shown when image mode) -->
+            <div id="image-options">
+              <div class="control-group">
+                <label class="control-label">Format</label>
+                <div class="control-buttons">
+                  <button class="control-btn active" data-format="png">PNG</button>
+                  <button class="control-btn" data-format="jpeg">JPEG</button>
+                  <button class="control-btn" data-format="webp">WebP</button>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Scale</label>
+                <div class="control-buttons">
+                  <button class="control-btn" data-scale="1">1x</button>
+                  <button class="control-btn active" data-scale="2">2x</button>
+                  <button class="control-btn" data-scale="3">3x</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PDF Options (shown when pdf mode) -->
+            <div id="pdf-options" style="display: none;">
+              <div class="control-group">
+                <label class="control-label">Page Size</label>
+                <div class="control-buttons">
+                  <button class="control-btn active" data-pagesize="A4">A4</button>
+                  <button class="control-btn" data-pagesize="Letter">Letter</button>
+                  <button class="control-btn" data-pagesize="Legal">Legal</button>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Header Text</label>
+                <input type="text" class="control-input" id="header-text" value="Analytics Report - {date}" placeholder="Header text...">
+              </div>
+
+              <div class="control-group">
+                <label class="control-label">Footer Text</label>
+                <input type="text" class="control-input" id="footer-text" value="Generated with PrimSnap" placeholder="Footer text...">
               </div>
             </div>
 
@@ -1314,13 +1425,13 @@
                   <span class="option-label">Use @media print styles</span>
                   <div class="toggle" id="toggle-print" onclick="toggleOption(this)"></div>
                 </div>
-                <div class="option-row">
+                <div class="option-row" id="header-option" style="display: none;">
                   <span class="option-label">Show header</span>
-                  <div class="toggle" id="toggle-header" onclick="toggleOption(this)"></div>
+                  <div class="toggle active" id="toggle-header" onclick="toggleOption(this)"></div>
                 </div>
-                <div class="option-row">
+                <div class="option-row" id="footer-option" style="display: none;">
                   <span class="option-label">Show footer</span>
-                  <div class="toggle" id="toggle-footer" onclick="toggleOption(this)"></div>
+                  <div class="toggle active" id="toggle-footer" onclick="toggleOption(this)"></div>
                 </div>
                 <div class="option-row">
                   <span class="option-label">Avoid break inside sections</span>
@@ -1329,21 +1440,28 @@
               </div>
             </div>
 
-            <div class="action-buttons">
+            <!-- Action Buttons -->
+            <div class="action-buttons" id="image-actions">
               <button class="action-btn action-btn-primary" onclick="capturePreview()">
                 Preview Capture
               </button>
-              <button class="action-btn action-btn-secondary" onclick="capturePNG()">
-                Download PNG
-              </button>
-              <button class="action-btn action-btn-secondary" onclick="captureJPEG()">
-                Download JPEG
+              <button class="action-btn action-btn-secondary" onclick="downloadImage()">
+                Download Image
               </button>
               <button class="action-btn action-btn-accent" onclick="captureHighRes()">
                 High-Res (3x)
               </button>
               <button class="action-btn action-btn-secondary" onclick="captureWithInjection()">
                 With CSS Injection
+              </button>
+            </div>
+
+            <div class="action-buttons" id="pdf-actions" style="display: none;">
+              <button class="action-btn action-btn-primary" onclick="previewPDF()">
+                Preview PDF
+              </button>
+              <button class="action-btn action-btn-accent" onclick="downloadPDF()">
+                Download PDF
               </button>
             </div>
           </div>
@@ -1862,6 +1980,44 @@
       });
     });
 
+    // Mode switching
+    let currentMode = 'image';
+    let selectedPageSize = 'A4';
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      // Update mode buttons
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+
+      // Show/hide options panels
+      document.getElementById('image-options').style.display = mode === 'image' ? 'block' : 'none';
+      document.getElementById('pdf-options').style.display = mode === 'pdf' ? 'block' : 'none';
+      document.getElementById('image-actions').style.display = mode === 'image' ? 'flex' : 'none';
+      document.getElementById('pdf-actions').style.display = mode === 'pdf' ? 'flex' : 'none';
+
+      // Show/hide header/footer options
+      document.getElementById('header-option').style.display = mode === 'pdf' ? 'flex' : 'none';
+      document.getElementById('footer-option').style.display = mode === 'pdf' ? 'flex' : 'none';
+
+      // Reset header/footer toggles for PDF mode
+      if (mode === 'pdf') {
+        options.showHeader = document.getElementById('toggle-header').classList.contains('active');
+        options.showFooter = document.getElementById('toggle-footer').classList.contains('active');
+      }
+    }
+
+    // Page size buttons
+    document.querySelectorAll('[data-pagesize]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-pagesize]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedPageSize = btn.dataset.pagesize;
+      });
+    });
+
     // Toggle options
     function toggleOption(el) {
       el.classList.toggle('active');
@@ -1875,24 +2031,41 @@
       }
     }
 
-    // Get current options
-    function getOptions() {
+    // Get current options for IMAGE mode (no header/footer)
+    function getImageOptions() {
       return {
         format: selectedFormat,
         scale: selectedScale,
-        ...options,
-        header: options.showHeader ? '<span style="font-weight:600;">Analytics Report</span><span>{date}</span>' : null,
-        footer: options.showFooter ? '<span>Generated with PrimSnap</span><span>Page {page} of {pages}</span>' : null,
+        usePrintStyles: options.usePrintStyles,
+        avoidBreakInside: options.avoidBreakInside,
         debug: true
       };
     }
 
-    // Capture functions
+    // Get current options for PDF mode (with header/footer)
+    function getPdfOptions() {
+      const headerText = document.getElementById('header-text').value || 'Report - {date}';
+      const footerText = document.getElementById('footer-text').value || 'Generated with PrimSnap';
+
+      return {
+        scale: 2,
+        usePrintStyles: options.usePrintStyles,
+        avoidBreakInside: options.avoidBreakInside,
+        pageSize: selectedPageSize,
+        showHeader: options.showHeader,
+        showFooter: options.showFooter,
+        header: { text: headerText, height: 30 },
+        footer: { text: footerText, height: 30 },
+        debug: true
+      };
+    }
+
+    // IMAGE mode functions
     async function capturePreview() {
       try {
         await PrimSnap.preview('#capture-target', {
-          ...getOptions(),
-          title: 'Capture Preview',
+          ...getImageOptions(),
+          title: 'Image Preview',
           filename: `primsnap-capture.${selectedFormat}`
         });
       } catch (e) {
@@ -1901,24 +2074,12 @@
       }
     }
 
-    async function capturePNG() {
+    async function downloadImage() {
       try {
-        await PrimSnap.download('#capture-target', 'primsnap-capture.png', {
-          ...getOptions(),
-          format: 'png'
-        });
-      } catch (e) {
-        console.error(e);
-        alert('Capture failed: ' + e.message);
-      }
-    }
-
-    async function captureJPEG() {
-      try {
-        await PrimSnap.download('#capture-target', 'primsnap-capture.jpg', {
-          ...getOptions(),
-          format: 'jpeg',
-          backgroundColor: '#ffffff'
+        const ext = selectedFormat === 'jpeg' ? 'jpg' : selectedFormat;
+        await PrimSnap.download('#capture-target', `primsnap-capture.${ext}`, {
+          ...getImageOptions(),
+          backgroundColor: selectedFormat === 'jpeg' ? '#ffffff' : null
         });
       } catch (e) {
         console.error(e);
@@ -1929,7 +2090,7 @@
     async function captureHighRes() {
       try {
         await PrimSnap.download('#capture-target', 'primsnap-capture-3x.png', {
-          ...getOptions(),
+          ...getImageOptions(),
           scale: 3
         });
       } catch (e) {
@@ -1941,7 +2102,7 @@
     async function captureWithInjection() {
       try {
         await PrimSnap.preview('#capture-target', {
-          ...getOptions(),
+          ...getImageOptions(),
           title: 'With CSS Injection',
           injectCSS: `
             .stat-card { border: 3px solid gold !important; }
@@ -1951,6 +2112,29 @@
       } catch (e) {
         console.error(e);
         alert('Capture failed: ' + e.message);
+      }
+    }
+
+    // PDF mode functions
+    async function previewPDF() {
+      try {
+        await PrimSnap.previewPDF('#capture-target', {
+          ...getPdfOptions(),
+          title: 'PDF Preview',
+          filename: 'primsnap-report.pdf'
+        });
+      } catch (e) {
+        console.error(e);
+        alert('PDF preview failed: ' + e.message);
+      }
+    }
+
+    async function downloadPDF() {
+      try {
+        await PrimSnap.toPDF('#capture-target', 'primsnap-report.pdf', getPdfOptions());
+      } catch (e) {
+        console.error(e);
+        alert('PDF generation failed: ' + e.message);
       }
     }
 
