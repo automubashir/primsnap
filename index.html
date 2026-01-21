@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>PrimSnap - Pixel-Perfect DOM Screenshot & PDF Library</title>
+  <meta name="title" content="PrimSnap - Pixel-Perfect DOM Screenshot & PDF Library">
+  <meta name="description" content="The most accurate client-side screenshot library. Capture complex CSS including gradients, transforms, filters, clip-paths, pseudo-elements, and Shadow DOM. Generate PDFs with custom headers and footers. Zero dependencies.">
+  <meta name="keywords" content="screenshot, DOM capture, html2canvas alternative, PDF generator, JavaScript screenshot, client-side screenshot, CSS capture, web screenshot, primsnap">
+  <meta name="author" content="automubashir">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://automubashir.github.io/primsnap/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://automubashir.github.io/primsnap/">
+  <meta property="og:title" content="PrimSnap - Pixel-Perfect DOM Screenshot & PDF Library">
+  <meta property="og:description" content="The most accurate client-side screenshot library. Capture complex CSS, generate PDFs. Zero dependencies.">
+  <meta property="og:image" content="https://automubashir.github.io/primsnap/og-image.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://automubashir.github.io/primsnap/">
+  <meta property="twitter:title" content="PrimSnap - Pixel-Perfect DOM Screenshot & PDF Library">
+  <meta property="twitter:description" content="The most accurate client-side screenshot library. Capture complex CSS, generate PDFs. Zero dependencies.">
+  <meta property="twitter:image" content="https://automubashir.github.io/primsnap/og-image.svg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.svg">
+  <meta name="theme-color" content="#6366f1">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Schema.org structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PrimSnap",
+    "description": "Pixel-perfect DOM screenshot and PDF library for JavaScript",
+    "url": "https://automubashir.github.io/primsnap/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "automubashir",
+      "url": "https://github.com/automubashir"
+    },
+    "softwareVersion": "2.0.0",
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+  <style>
+    /* ============================================================================
+       DESIGN SYSTEM
+       ============================================================================ */
+    :root {
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --gray-950: #030712;
+
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --bg-elevated: #22222e;
+
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.12);
+
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+      --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+      --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-accent: linear-gradient(135deg, var(--accent) 0%, #34d399 100%);
+      --gradient-dark: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================================================
+       LAYOUT
+       ============================================================================ */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ============================================================================
+       HEADER & NAVIGATION
+       ============================================================================ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--gradient-primary);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      padding: 8px 16px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+      background: var(--bg-card);
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    /* ============================================================================
+       HERO SECTION
+       ============================================================================ */
+    .hero {
+      padding: 100px 0 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .hero-badge span {
+      color: var(--accent);
+    }
+
+    .hero-title {
+      font-size: clamp(48px, 8vw, 80px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -3px;
+      margin-bottom: 24px;
+    }
+
+    .hero-title-gradient {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 20px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-light);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-light);
+    }
+
+    /* ============================================================================
+       DEMO SECTION
+       ============================================================================ */
+    .demo-section {
+      padding: 60px 0 100px;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      position: sticky;
+      top: 96px;
+    }
+
+    .controls-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .controls-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: var(--gradient-primary);
+      border-radius: 2px;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+    }
+
+    .control-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .control-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .control-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .control-btn:hover {
+      background: var(--bg-card);
+      border-color: var(--primary);
+    }
+
+    .control-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .action-btn {
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-btn-primary {
+      background: var(--gradient-primary);
+      color: white;
+      grid-column: span 2;
+    }
+
+    .action-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+    }
+
+    .action-btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .action-btn-secondary:hover {
+      border-color: var(--primary);
+    }
+
+    .action-btn-accent {
+      background: var(--gradient-accent);
+      color: white;
+    }
+
+    .action-btn-accent:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Options */
+    .options-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .option-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle.active {
+      background: var(--primary);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .toggle.active::after {
+      left: 22px;
+    }
+
+    /* Capture Target */
+    .capture-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .capture-header {
+      padding: 16px 24px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .capture-header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .capture-header-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .capture-header-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .capture-header-dot:nth-child(1) { background: #ef4444; }
+    .capture-header-dot:nth-child(2) { background: #f59e0b; }
+    .capture-header-dot:nth-child(3) { background: #10b981; }
+
+    .capture-body {
+      padding: 24px;
+      background: white;
+    }
+
+    /* ============================================================================
+       CAPTURE TARGET CONTENT
+       ============================================================================ */
+    #capture-target {
+      font-family: 'Inter', sans-serif;
+      color: #1f2937;
+      background: white;
+    }
+
+    .report {
+      max-width: 100%;
+    }
+
+    /* Report Header */
+    .report-header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      padding: 40px 32px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .report-header::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    .report-header::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: 15%;
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+    }
+
+    .report-header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .report-logo {
+      width: 56px;
+      height: 56px;
+      background: white;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #6366f1;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .report-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .report-date {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Report Body */
+    .report-content {
+      padding: 32px;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      border-radius: 12px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: attr(data-icon);
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 32px;
+      opacity: 0.2;
+    }
+
+    .stat-card.purple { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+    .stat-card.green { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+    .stat-card.orange { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+    .stat-card.blue { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.9;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .section-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    /* Transform demos */
+    .demo-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .demo-item {
+      background: #f3f4f6;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .demo-box {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 10px;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .demo-item:nth-child(1) .demo-box { transform: rotate(15deg); }
+    .demo-item:nth-child(2) .demo-box { transform: scale(1.15); }
+    .demo-item:nth-child(3) .demo-box { transform: skewX(-10deg); }
+    .demo-item:nth-child(4) .demo-box { transform: perspective(200px) rotateY(20deg); }
+
+    .demo-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Clip paths */
+    .clip-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .clip-item {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .clip-item.circle {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      clip-path: circle(40% at 50% 50%);
+    }
+
+    .clip-item.polygon {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    }
+
+    .clip-item.ellipse {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      clip-path: ellipse(35% 45% at 50% 50%);
+    }
+
+    .clip-item.inset {
+      background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+      clip-path: inset(8% round 8px);
+    }
+
+    /* Filters */
+    .filter-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .filter-item {
+      height: 60px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .filter-item.blur { filter: blur(1.5px); }
+    .filter-item.brightness { filter: brightness(1.4); }
+    .filter-item.contrast { filter: contrast(1.4); }
+    .filter-item.grayscale { filter: grayscale(100%); }
+    .filter-item.hue { filter: hue-rotate(90deg); }
+
+    /* Shadows */
+    .shadow-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .shadow-item {
+      background: white;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .shadow-item.soft {
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+    }
+
+    .shadow-item.hard {
+      box-shadow: 6px 6px 0 #6366f1;
+    }
+
+    .shadow-item.multi {
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.1),
+                  0 10px 25px rgba(99, 102, 241, 0.15),
+                  0 20px 45px rgba(99, 102, 241, 0.1);
+    }
+
+    .shadow-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: #6366f1;
+    }
+
+    .shadow-item.soft .shadow-text { text-shadow: 1px 1px 3px rgba(99, 102, 241, 0.3); }
+    .shadow-item.hard .shadow-text { text-shadow: 2px 2px 0 rgba(99, 102, 241, 0.2); }
+
+    /* Gradients */
+    .gradient-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .gradient-item {
+      height: 100px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .gradient-item.radial {
+      background: radial-gradient(circle at 30% 30%, #6366f1, #ec4899);
+    }
+
+    .gradient-item.conic {
+      background: conic-gradient(from 0deg, #6366f1, #ec4899, #10b981, #f59e0b, #6366f1);
+    }
+
+    .gradient-item.mesh {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, transparent 50%),
+                  linear-gradient(225deg, rgba(236, 72, 153, 0.9) 0%, transparent 50%),
+                  linear-gradient(315deg, rgba(16, 185, 129, 0.9) 0%, transparent 50%),
+                  #1f2937;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    .data-table th {
+      background: #1f2937;
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table th:first-child { border-radius: 8px 0 0 8px; }
+    .data-table th:last-child { border-radius: 0 8px 8px 0; }
+
+    .data-table td {
+      border-bottom: 1px solid #e5e7eb;
+      color: #4b5563;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+
+    /* Progress */
+    .progress-item {
+      margin-bottom: 16px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .progress-label { font-weight: 500; color: #1f2937; }
+    .progress-value { font-weight: 700; color: #6366f1; }
+
+    .progress-bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
+    .progress-fill.purple { background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); }
+    .progress-fill.green { background: linear-gradient(90deg, #10b981 0%, #34d399 100%); }
+    .progress-fill.orange { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
+
+    /* Page Break for PDF */
+    .page-break {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+      margin: 40px 0;
+      page-break-after: always;
+      break-after: page;
+    }
+
+    @media print {
+      .page-break {
+        height: 0;
+        margin: 0;
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+
+    /* Report Footer */
+    .report-footer {
+      background: #f9fafb;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #6b7280;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 10px;
+    }
+
+    /* ============================================================================
+       FEATURES SECTION
+       ============================================================================ */
+    .features-section {
+      padding: 100px 0;
+      background: var(--bg-secondary);
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .features-header h2 {
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .features-header p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ============================================================================
+       CODE SECTION
+       ============================================================================ */
+    .code-section {
+      padding: 100px 0;
+    }
+
+    .code-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .code-header h2 {
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .code-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .code-block-header {
+      padding: 16px 24px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-block-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .code-block-body {
+      padding: 24px;
+      overflow-x: auto;
+    }
+
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      margin: 0;
+    }
+
+    .code-block .keyword { color: #c084fc; }
+    .code-block .string { color: #86efac; }
+    .code-block .function { color: #fbbf24; }
+    .code-block .comment { color: #64748b; }
+    .code-block .number { color: #f472b6; }
+
+    /* ============================================================================
+       FOOTER
+       ============================================================================ */
+    .site-footer {
+      padding: 60px 0 40px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-copyright {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: var(--text-primary);
+    }
+
+    /* ============================================================================
+       PRINT STYLES
+       ============================================================================ */
+    @media print {
+      .header, .controls-panel, .features-section, .code-section, .site-footer {
+        display: none !important;
+      }
+
+      .capture-panel {
+        border: none;
+        box-shadow: none;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <nav class="nav container">
+        <a href="#" class="logo">
+          <div class="logo-icon">PS</div>
+          <span class="logo-text">PrimSnap</span>
+        </a>
+        <div class="nav-links">
+          <a href="#demo" class="nav-link">Demo</a>
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#usage" class="nav-link">Usage</a>
+          <a href="https://github.com/primsnap/primsnap" class="nav-link" target="_blank">GitHub</a>
+          <button class="nav-btn" onclick="downloadLibrary()">Download</button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-content">
+        <div class="hero-badge">
+          <span>v2.0</span> Now with @media print support
+        </div>
+        <h1 class="hero-title">
+          Pixel-Perfect<br>
+          <span class="hero-title-gradient">Screenshots</span>
+        </h1>
+        <p class="hero-subtitle">
+          The most accurate client-side screenshot library. Captures complex CSS including gradients, transforms, filters, clip-paths, pseudo-elements, and Shadow DOM.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="scrollToDemo()">
+            Try Demo
+          </button>
+          <a href="#usage" class="btn btn-secondary">
+            View Documentation
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section" id="demo">
+      <div class="container">
+        <div class="demo-grid">
+          <!-- Controls -->
+          <div class="controls-panel">
+            <h3 class="controls-title">Capture Options</h3>
+
+            <div class="control-group">
+              <label class="control-label">Format</label>
+              <div class="control-buttons">
+                <button class="control-btn active" data-format="png">PNG</button>
+                <button class="control-btn" data-format="jpeg">JPEG</button>
+                <button class="control-btn" data-format="webp">WebP</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Scale</label>
+              <div class="control-buttons">
+                <button class="control-btn" data-scale="1">1x</button>
+                <button class="control-btn active" data-scale="2">2x</button>
+                <button class="control-btn" data-scale="3">3x</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Options</label>
+              <div class="options-grid">
+                <div class="option-row">
+                  <span class="option-label">Use @media print styles</span>
+                  <div class="toggle" id="toggle-print" onclick="toggleOption(this)"></div>
+                </div>
+                <div class="option-row">
+                  <span class="option-label">Show header</span>
+                  <div class="toggle" id="toggle-header" onclick="toggleOption(this)"></div>
+                </div>
+                <div class="option-row">
+                  <span class="option-label">Show footer</span>
+                  <div class="toggle" id="toggle-footer" onclick="toggleOption(this)"></div>
+                </div>
+                <div class="option-row">
+                  <span class="option-label">Avoid break inside sections</span>
+                  <div class="toggle" id="toggle-break" onclick="toggleOption(this)"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button class="action-btn action-btn-primary" onclick="capturePreview()">
+                Preview Capture
+              </button>
+              <button class="action-btn action-btn-secondary" onclick="capturePNG()">
+                Download PNG
+              </button>
+              <button class="action-btn action-btn-secondary" onclick="captureJPEG()">
+                Download JPEG
+              </button>
+              <button class="action-btn action-btn-accent" onclick="captureHighRes()">
+                High-Res (3x)
+              </button>
+              <button class="action-btn action-btn-secondary" onclick="captureWithInjection()">
+                With CSS Injection
+              </button>
+            </div>
+          </div>
+
+          <!-- Capture Target -->
+          <div class="capture-panel">
+            <div class="capture-header">
+              <div class="capture-header-dots">
+                <div class="capture-header-dot"></div>
+                <div class="capture-header-dot"></div>
+                <div class="capture-header-dot"></div>
+              </div>
+              <span class="capture-header-title">capture-target.html</span>
+            </div>
+            <div class="capture-body">
+              <div id="capture-target">
+                <div class="report">
+                  <!-- Report Header -->
+                  <div class="report-header">
+                    <div class="report-header-content">
+                      <div class="report-logo">PS</div>
+                      <h1 class="report-title">Analytics Report</h1>
+                      <p class="report-date" id="report-date"></p>
+                    </div>
+                  </div>
+
+                  <div class="report-content">
+                    <!-- Stats -->
+                    <div class="stats-row">
+                      <div class="stat-card purple" data-icon="👥">
+                        <div class="stat-value">24,891</div>
+                        <div class="stat-label">Users</div>
+                      </div>
+                      <div class="stat-card green" data-icon="📈">
+                        <div class="stat-value">98.7%</div>
+                        <div class="stat-label">Uptime</div>
+                      </div>
+                      <div class="stat-card orange" data-icon="💰">
+                        <div class="stat-value">$4.2M</div>
+                        <div class="stat-label">Revenue</div>
+                      </div>
+                      <div class="stat-card blue" data-icon="🚀">
+                        <div class="stat-value">1,247</div>
+                        <div class="stat-label">Deploys</div>
+                      </div>
+                    </div>
+
+                    <!-- Transforms -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">🔄</div>
+                        <h3 class="section-title">CSS Transforms</h3>
+                      </div>
+                      <div class="demo-row">
+                        <div class="demo-item">
+                          <div class="demo-box">15°</div>
+                          <div class="demo-label">Rotate</div>
+                        </div>
+                        <div class="demo-item">
+                          <div class="demo-box">1.15x</div>
+                          <div class="demo-label">Scale</div>
+                        </div>
+                        <div class="demo-item">
+                          <div class="demo-box">-10°</div>
+                          <div class="demo-label">Skew</div>
+                        </div>
+                        <div class="demo-item">
+                          <div class="demo-box">3D</div>
+                          <div class="demo-label">Perspective</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Clip Paths -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">✂️</div>
+                        <h3 class="section-title">Clip-Path</h3>
+                      </div>
+                      <div class="clip-row">
+                        <div class="clip-item circle">Circle</div>
+                        <div class="clip-item polygon">Polygon</div>
+                        <div class="clip-item ellipse">Ellipse</div>
+                        <div class="clip-item inset">Inset</div>
+                      </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">🎛️</div>
+                        <h3 class="section-title">CSS Filters</h3>
+                      </div>
+                      <div class="filter-row">
+                        <div class="filter-item blur">Blur</div>
+                        <div class="filter-item brightness">Bright</div>
+                        <div class="filter-item contrast">Contrast</div>
+                        <div class="filter-item grayscale">Gray</div>
+                        <div class="filter-item hue">Hue</div>
+                      </div>
+                    </div>
+
+                    <!-- Shadows -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">🌑</div>
+                        <h3 class="section-title">Box & Text Shadows</h3>
+                      </div>
+                      <div class="shadow-row">
+                        <div class="shadow-item soft">
+                          <div class="shadow-text">Soft Shadow</div>
+                        </div>
+                        <div class="shadow-item hard">
+                          <div class="shadow-text">Hard Shadow</div>
+                        </div>
+                        <div class="shadow-item multi">
+                          <div class="shadow-text">Multi-Layer</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Gradients -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">🎨</div>
+                        <h3 class="section-title">Complex Gradients</h3>
+                      </div>
+                      <div class="gradient-row">
+                        <div class="gradient-item radial">Radial</div>
+                        <div class="gradient-item conic">Conic</div>
+                        <div class="gradient-item mesh">Mesh</div>
+                      </div>
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">📊</div>
+                        <h3 class="section-title">Progress</h3>
+                      </div>
+                      <div class="progress-item">
+                        <div class="progress-header">
+                          <span class="progress-label">Frontend</span>
+                          <span class="progress-value">92%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill purple" style="width: 92%;"></div>
+                        </div>
+                      </div>
+                      <div class="progress-item">
+                        <div class="progress-header">
+                          <span class="progress-label">Backend</span>
+                          <span class="progress-value">78%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill green" style="width: 78%;"></div>
+                        </div>
+                      </div>
+                      <div class="progress-item">
+                        <div class="progress-header">
+                          <span class="progress-label">Testing & QA</span>
+                          <span class="progress-value">65%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill orange" style="width: 65%;"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">📋</div>
+                        <h3 class="section-title">Data Table</h3>
+                      </div>
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Client</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><strong>#001</strong></td>
+                            <td>Acme Corp</td>
+                            <td>$125,000</td>
+                            <td><span class="badge badge-success">Done</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>#002</strong></td>
+                            <td>Global Inc</td>
+                            <td>$87,500</td>
+                            <td><span class="badge badge-warning">Pending</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>#003</strong></td>
+                            <td>Tech Ltd</td>
+                            <td>$52,000</td>
+                            <td><span class="badge badge-danger">Failed</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- PAGE 2: Extended Data -->
+                    <div class="page-break"></div>
+
+                    <!-- Page 2 Header -->
+                    <div class="section" style="margin-top: 20px;">
+                      <div class="section-header">
+                        <div class="section-icon">📈</div>
+                        <h3 class="section-title">Extended Analytics - Page 2</h3>
+                      </div>
+                      <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                        This section demonstrates multi-page PDF support. When you print to PDF, this content will appear on page 2.
+                      </p>
+                    </div>
+
+                    <!-- Monthly Breakdown -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">📅</div>
+                        <h3 class="section-title">Monthly Breakdown</h3>
+                      </div>
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>Month</th>
+                            <th>Revenue</th>
+                            <th>Users</th>
+                            <th>Growth</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><strong>January</strong></td>
+                            <td>$312,500</td>
+                            <td>18,234</td>
+                            <td><span class="badge badge-success">+12%</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>February</strong></td>
+                            <td>$287,000</td>
+                            <td>19,102</td>
+                            <td><span class="badge badge-warning">+5%</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>March</strong></td>
+                            <td>$425,000</td>
+                            <td>22,891</td>
+                            <td><span class="badge badge-success">+23%</span></td>
+                          </tr>
+                          <tr>
+                            <td><strong>April</strong></td>
+                            <td>$398,200</td>
+                            <td>24,891</td>
+                            <td><span class="badge badge-success">+18%</span></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Regional Stats -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">🌍</div>
+                        <h3 class="section-title">Regional Performance</h3>
+                      </div>
+                      <div class="stats-row">
+                        <div class="stat-card purple" data-icon="🇺🇸">
+                          <div class="stat-value">45%</div>
+                          <div class="stat-label">North America</div>
+                        </div>
+                        <div class="stat-card green" data-icon="🇪🇺">
+                          <div class="stat-value">28%</div>
+                          <div class="stat-label">Europe</div>
+                        </div>
+                        <div class="stat-card orange" data-icon="🌏">
+                          <div class="stat-value">18%</div>
+                          <div class="stat-label">Asia Pacific</div>
+                        </div>
+                        <div class="stat-card blue" data-icon="🌎">
+                          <div class="stat-value">9%</div>
+                          <div class="stat-label">Other</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Additional Progress -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">🎯</div>
+                        <h3 class="section-title">Q1 Goals Progress</h3>
+                      </div>
+                      <div class="progress-item">
+                        <div class="progress-header">
+                          <span class="progress-label">Revenue Target</span>
+                          <span class="progress-value">87%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill purple" style="width: 87%;"></div>
+                        </div>
+                      </div>
+                      <div class="progress-item">
+                        <div class="progress-header">
+                          <span class="progress-label">User Acquisition</span>
+                          <span class="progress-value">112%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill green" style="width: 100%;"></div>
+                        </div>
+                      </div>
+                      <div class="progress-item">
+                        <div class="progress-header">
+                          <span class="progress-label">Customer Satisfaction</span>
+                          <span class="progress-value">94%</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill orange" style="width: 94%;"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="section">
+                      <div class="section-header">
+                        <div class="section-icon">📝</div>
+                        <h3 class="section-title">Notes & Summary</h3>
+                      </div>
+                      <div style="background: #f8f9ff; padding: 20px; border-radius: 10px; border-left: 4px solid #6366f1;">
+                        <p style="color: #4b5563; font-size: 14px; line-height: 1.8; margin: 0;">
+                          <strong>Key Highlights:</strong> This report demonstrates PrimSnap's ability to capture complex CSS layouts including gradients, transforms, filters, clip-paths, and more. The library supports multi-page PDF generation with custom headers and footers, making it ideal for generating professional reports directly from your web application.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Footer -->
+                  <div class="report-footer">
+                    <div class="footer-brand">
+                      <div class="footer-logo">PS</div>
+                      <span>Generated with PrimSnap</span>
+                    </div>
+                    <span>Page 2 of 2</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+      <div class="container">
+        <div class="features-header">
+          <h2>Why PrimSnap?</h2>
+          <p>Built for developers who need accurate, reliable screenshots without the hassle.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h4 class="feature-title">Pixel-Perfect Accuracy</h4>
+            <p class="feature-desc">SVG foreignObject rendering ensures your screenshots match exactly what you see in the browser.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <h4 class="feature-title">Full CSS Support</h4>
+            <p class="feature-desc">Gradients, transforms, filters, clip-paths, pseudo-elements, CSS variables - all captured perfectly.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🖨️</div>
+            <h4 class="feature-title">Print Styles</h4>
+            <p class="feature-desc">Respects @media print CSS rules just like the browser's native print function.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📄</div>
+            <h4 class="feature-title">Header & Footer</h4>
+            <p class="feature-desc">Add custom headers and footers with template variables like page numbers and dates.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">✂️</div>
+            <h4 class="feature-title">Page Breaks</h4>
+            <p class="feature-desc">Control page breaks with break-inside: avoid for clean multi-page documents.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💉</div>
+            <h4 class="feature-title">CSS/JS Injection</h4>
+            <p class="feature-desc">Inject custom styles or run JavaScript before capture for dynamic modifications.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌙</div>
+            <h4 class="feature-title">Shadow DOM</h4>
+            <p class="feature-desc">Full support for Web Components and Shadow DOM traversal.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔤</div>
+            <h4 class="feature-title">Web Fonts</h4>
+            <p class="feature-desc">Waits for fonts to load and inlines them as data URIs for reliable text rendering.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📦</div>
+            <h4 class="feature-title">Zero Dependencies</h4>
+            <p class="feature-desc">Single file, no build tools, no external dependencies. Just include and use.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code Section -->
+    <section class="code-section" id="usage">
+      <div class="container">
+        <div class="code-header">
+          <h2>Simple API</h2>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-block-title">JavaScript</span>
+          </div>
+          <div class="code-block-body">
+            <pre><span class="comment">// Simple capture</span>
+<span class="keyword">const</span> dataUrl = <span class="keyword">await</span> <span class="function">PrimSnap.capture</span>(<span class="string">'#element'</span>);
+
+<span class="comment">// Download as PNG</span>
+<span class="keyword">await</span> <span class="function">PrimSnap.download</span>(<span class="string">'#element'</span>, <span class="string">'report.png'</span>);
+
+<span class="comment">// Preview in modal</span>
+<span class="keyword">await</span> <span class="function">PrimSnap.preview</span>(<span class="string">'#element'</span>);
+
+<span class="comment">// With all options</span>
+<span class="keyword">await</span> <span class="function">PrimSnap.capture</span>(<span class="string">'#element'</span>, {
+  format: <span class="string">'png'</span>,
+  scale: <span class="number">2</span>,
+  backgroundColor: <span class="string">'#ffffff'</span>,
+  usePrintStyles: <span class="keyword">true</span>,
+
+  <span class="comment">// Header/Footer</span>
+  showHeader: <span class="keyword">true</span>,
+  header: <span class="string">'&lt;span&gt;My Report&lt;/span&gt;&lt;span&gt;{date}&lt;/span&gt;'</span>,
+  showFooter: <span class="keyword">true</span>,
+  footer: <span class="string">'&lt;span&gt;Confidential&lt;/span&gt;&lt;span&gt;Page {page}&lt;/span&gt;'</span>,
+
+  <span class="comment">// Page breaks</span>
+  avoidBreakInside: [<span class="string">'.section'</span>, <span class="string">'.card'</span>],
+
+  <span class="comment">// CSS/JS injection</span>
+  injectCSS: <span class="string">'.no-print { display: none; }'</span>,
+  injectJS: (el) => { el.querySelector(<span class="string">'.date'</span>).textContent = <span class="keyword">new</span> Date(); },
+
+  <span class="comment">// Callbacks</span>
+  onProgress: (p, msg) => console.log(p * <span class="number">100</span> + <span class="string">'%'</span>)
+});</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-logo-section">
+            <div class="logo-icon">PS</div>
+            <span class="footer-copyright">PrimSnap v2.0 - MIT License</span>
+          </div>
+          <div class="footer-links">
+            <a href="https://github.com/automubashir/primsnap" class="footer-link">GitHub</a>
+            <a href="#" class="footer-link">Documentation</a>
+            <a href="#" class="footer-link">Examples</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- PrimSnap Library -->
+  <script src="primsnap.js"></script>
+
+  <script>
+    // Set date
+    document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // State
+    let selectedFormat = 'png';
+    let selectedScale = 2;
+    let options = {
+      usePrintStyles: false,
+      showHeader: false,
+      showFooter: false,
+      avoidBreakInside: []
+    };
+
+    // Format buttons
+    document.querySelectorAll('[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedFormat = btn.dataset.format;
+      });
+    });
+
+    // Scale buttons
+    document.querySelectorAll('[data-scale]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-scale]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedScale = parseInt(btn.dataset.scale);
+      });
+    });
+
+    // Toggle options
+    function toggleOption(el) {
+      el.classList.toggle('active');
+      const id = el.id;
+
+      if (id === 'toggle-print') options.usePrintStyles = el.classList.contains('active');
+      if (id === 'toggle-header') options.showHeader = el.classList.contains('active');
+      if (id === 'toggle-footer') options.showFooter = el.classList.contains('active');
+      if (id === 'toggle-break') {
+        options.avoidBreakInside = el.classList.contains('active') ? ['.section', '.stats-row'] : [];
+      }
+    }
+
+    // Get current options
+    function getOptions() {
+      return {
+        format: selectedFormat,
+        scale: selectedScale,
+        ...options,
+        header: options.showHeader ? '<span style="font-weight:600;">Analytics Report</span><span>{date}</span>' : null,
+        footer: options.showFooter ? '<span>Generated with PrimSnap</span><span>Page {page} of {pages}</span>' : null,
+        debug: true
+      };
+    }
+
+    // Capture functions
+    async function capturePreview() {
+      try {
+        await PrimSnap.preview('#capture-target', {
+          ...getOptions(),
+          title: 'Capture Preview',
+          filename: `primsnap-capture.${selectedFormat}`
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Capture failed: ' + e.message);
+      }
+    }
+
+    async function capturePNG() {
+      try {
+        await PrimSnap.download('#capture-target', 'primsnap-capture.png', {
+          ...getOptions(),
+          format: 'png'
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Capture failed: ' + e.message);
+      }
+    }
+
+    async function captureJPEG() {
+      try {
+        await PrimSnap.download('#capture-target', 'primsnap-capture.jpg', {
+          ...getOptions(),
+          format: 'jpeg',
+          backgroundColor: '#ffffff'
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Capture failed: ' + e.message);
+      }
+    }
+
+    async function captureHighRes() {
+      try {
+        await PrimSnap.download('#capture-target', 'primsnap-capture-3x.png', {
+          ...getOptions(),
+          scale: 3
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Capture failed: ' + e.message);
+      }
+    }
+
+    async function captureWithInjection() {
+      try {
+        await PrimSnap.preview('#capture-target', {
+          ...getOptions(),
+          title: 'With CSS Injection',
+          injectCSS: `
+            .stat-card { border: 3px solid gold !important; }
+            .report-header { filter: hue-rotate(30deg); }
+          `
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Capture failed: ' + e.message);
+      }
+    }
+
+    // Helpers
+    function scrollToDemo() {
+      document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function downloadLibrary() {
+      const link = document.createElement('a');
+      link.href = 'primsnap.js';
+      link.download = 'primsnap.js';
+      link.click();
+    }
+  </script>
+</body>
+</html>

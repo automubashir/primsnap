@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#12121a"/>
+    </linearGradient>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#ec4899"/>
+    </linearGradient>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="200" fill="#6366f1" opacity="0.1"/>
+  <circle cx="1100" cy="530" r="250" fill="#ec4899" opacity="0.1"/>
+
+  <!-- Logo -->
+  <rect x="100" y="200" width="80" height="80" rx="16" fill="url(#iconGrad)"/>
+  <text x="140" y="255" font-family="Inter, -apple-system, sans-serif" font-size="36" font-weight="800" fill="white" text-anchor="middle">PS</text>
+
+  <!-- Title -->
+  <text x="200" y="255" font-family="Inter, -apple-system, sans-serif" font-size="48" font-weight="800" fill="white">PrimSnap</text>
+
+  <!-- Tagline -->
+  <text x="100" y="350" font-family="Inter, -apple-system, sans-serif" font-size="64" font-weight="900" fill="url(#grad)">Pixel-Perfect</text>
+  <text x="100" y="430" font-family="Inter, -apple-system, sans-serif" font-size="64" font-weight="900" fill="white">Screenshots</text>
+
+  <!-- Description -->
+  <text x="100" y="520" font-family="Inter, -apple-system, sans-serif" font-size="24" fill="#a1a1aa">Client-side screenshot library with full CSS support</text>
+
+  <!-- URL -->
+  <text x="100" y="580" font-family="Inter, -apple-system, sans-serif" font-size="20" fill="#6366f1">github.com/automubashir/primsnap</text>
+</svg>
